@@ -38,11 +38,13 @@ export default function CreateRoom() {
     );
   }
 
-  const handleSubmit = async (e) => {
+  // In your CreateRoom component, update the handleSubmit function:
+
+const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
+  
     try {
       // Check if username is unique
       const checkResponse = await fetch('/api/check-username', {
@@ -50,14 +52,16 @@ export default function CreateRoom() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: formData.username }),
       });
-
+  
       const checkData = await checkResponse.json();
+      console.log('Username check response:', checkData);
+  
       if (!checkData.isAvailable) {
         setError('This username is already taken. Please choose another one.');
         setIsLoading(false);
         return;
       }
-
+  
       // Create room
       const response = await fetch('/api/create-room', {
         method: 'POST',
@@ -65,22 +69,26 @@ export default function CreateRoom() {
         body: JSON.stringify({
           ...formData,
           adminEmail: session?.user?.email,
-          invitedEmails: formData.invitedEmails.split(',').map(email => email.trim())
+          invitedEmails: formData.invitedEmails.split(',').map(email => email.trim()).filter(Boolean)
         }),
       });
-
+  
       const data = await response.json();
-      if (response.ok) {
-        router.push(`/room/${formData.username}`);
-      } else {
-        setError(data.error || 'Failed to create room');
+      console.log('Create room response:', data);
+  
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create room');
       }
+  
+      router.push(`/room/${formData.username}`);
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      console.error('Form submission error:', err);
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-indigo-50 pt-20 px-4">
       <div className="max-w-2xl mx-auto">
