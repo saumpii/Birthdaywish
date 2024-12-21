@@ -1,6 +1,6 @@
 // src/app/create-room/page.js
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -22,6 +22,21 @@ export default function CreateRoom() {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/login');
+    }
+  }, [status, router]);
+
+  // If loading or redirecting, show loading state
+  if (status === 'loading' || status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-indigo-50 pt-20 flex items-center justify-center">
+        <div className="text-xl font-medium text-gray-600">Loading...</div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,16 +81,6 @@ export default function CreateRoom() {
       setIsLoading(false);
     }
   };
-
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
-
-  if (!session) {
-    router.push('/login');
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-indigo-50 pt-20 px-4">
       <div className="max-w-2xl mx-auto">
