@@ -1,34 +1,42 @@
 // src/app/api/test-connection/route.js
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { headers } from 'next/headers';
 
 export async function GET() {
+  const headersList = headers();
+  
   try {
-    // Log environment variables (securely)
-    console.log('Environment check:', {
-      hasMainUrl: !!process.env.POSTGRES_POSTGRES_URL,
-      hasUnpooledUrl: !!process.env.POSTGRES_DATABASE_URL_UNPOOLED,
-      hasPrismaUrl: !!process.env.POSTGRES_POSTGRES_PRISMA_URL
-    });
+    // Log all available database-related environment variables
+    const envVars = {
+      hasPostgresUrl: !!process.env.POSTGRES_URL,
+      hasPoolingUrl: !!process.env.POSTGRES_URL_NON_POOLING,
+      hasPrismaUrl: !!process.env.POSTGRES_PRISMA_URL,
+      postgresHost: !!process.env.POSTGRES_HOST,
+      postgresUser: !!process.env.POSTGRES_USER,
+      postgresPassword: !!process.env.POSTGRES_PASSWORD,
+      postgresDatabase: !!process.env.POSTGRES_DATABASE,
+    };
+
+    console.log('Available environment variables:', envVars);
 
     // Test the connection
-    const testResult = await sql`SELECT NOW();`;
-    console.log('Connection test result:', testResult);
+    const { rows } = await sql`SELECT current_timestamp;`;
 
     return NextResponse.json({
       success: true,
-      timestamp: testResult.rows[0].now,
-      connection: 'Successfully connected to database'
+      timestamp: rows[0].current_timestamp,
+      environmentCheck: envVars
     });
   } catch (error) {
-    console.error('Detailed connection error:', error);
+    console.error('Connection error details:', error);
     return NextResponse.json({
       success: false,
       error: error.message,
-      details: {
-        code: error.code,
-        name: error.name,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      type: error.name,
+      availableVars: {
+        hasPostgresUrl: !!process.env.POSTGRES_URL,
+        hasPoolingUrl: !!process.env.POSTGRES_URL_NON_POOLING
       }
     }, { status: 500 });
   }
