@@ -3,7 +3,7 @@ import { sql } from '@vercel/postgres';
 
 export async function POST(req) {
   try {
-    if (!process.env.POSTGRES_POSTGRES_URL) {
+    if (!process.env.POSTGRES_URL) {
       throw new Error('Database configuration missing');
     }
 
