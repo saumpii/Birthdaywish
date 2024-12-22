@@ -4,16 +4,22 @@ import { sql } from '@vercel/postgres';
 
 export async function POST(req) {
   try {
-    // Verify we have at least one of the required connection strings
-    if (!process.env.POSTGRES_URL && !process.env.POSTGRES_URL_NON_POOLING) {
-      throw new Error('Database connection configuration is missing');
-    }
-
     const { username } = await req.json();
-    
-    // Test connection first
-    await sql`SELECT 1`;
 
+    // Check if rooms table exists and create if it doesn't
+    await sql`
+      CREATE TABLE IF NOT EXISTS rooms (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        room_name VARCHAR(255) NOT NULL,
+        theme VARCHAR(50) NOT NULL,
+        admin_email VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    // Now check for the username
     const { rows } = await sql`
       SELECT username FROM rooms WHERE username = ${username}
     `;
