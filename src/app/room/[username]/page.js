@@ -305,14 +305,14 @@ export default function Room({ params }) {
     const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
     return (
-        <div className={`min-h-screen ${theme.background} overflow-x-auto`}>
+        <div className={`min-h-screen ${theme.background} overflow-auto`} style={{ minWidth: '100vw', minHeight: '100vh' }}>
             <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
                 <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
                     Happy Birthday, {room?.room_name}! 🎉
                 </h1>
             </div>
 
-            <div className="relative min-h-[calc(100vh-4rem)] p-4 overflow-x-auto">
+            <div className="relative min-h-[calc(100vh-4rem)] p-4">
                 <div className="flex justify-between items-center mb-4">
                     {room?.is_admin && (
                         <div>
@@ -328,7 +328,7 @@ export default function Room({ params }) {
                         </button>
                     )}
                 </div>
-                <div className="relative min-h-[60vh] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
+                <div className="relative bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
                     {notes.map((note) => (
                         <Note
                             key={note.id}
