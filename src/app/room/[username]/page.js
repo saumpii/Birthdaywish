@@ -94,11 +94,11 @@ const Note = ({ note, onUpdate, onDelete }) => {
 };
 
 export default function Room({ params }) {
+    const router = useRouter();
     const [room, setRoom] = useState(null);
     const [notes, setNotes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const router = useRouter();
   
     useEffect(() => {
       const fetchRoom = async () => {
@@ -136,66 +136,130 @@ export default function Room({ params }) {
       fetchRoom();
     }, [params.username]);
   
-    if (isLoading) {
+    const handleAddNote = async () => {
+        if (!room?.id) return;
+    
+        try {
+          const initialPosition = {
+            x: Math.floor(Math.random() * (window.innerWidth / 2)), // Keep notes in visible area
+            y: Math.floor(Math.random() * 300) // Keep notes near the top
+          };
+    
+          const response = await fetch('/api/notes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              roomId: room.id,
+              content: '',
+              position_x: initialPosition.x,
+              position_y: initialPosition.y,
+              theme: room.theme
+            })
+          });
+    
+          if (!response.ok) {
+            throw new Error('Failed to create note');
+          }
+    
+          const newNote = await response.json();
+          setNotes(prevNotes => [...prevNotes, newNote]);
+        } catch (error) {
+          console.error('Error adding note:', error);
+          // Optionally add user feedback here
+        }
+      };
+    
+      const handleUpdateNote = async (updatedNote) => {
+        try {
+          const response = await fetch(`/api/notes/${updatedNote.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedNote)
+          });
+    
+          if (!response.ok) {
+            throw new Error('Failed to update note');
+          }
+    
+          setNotes(prevNotes =>
+            prevNotes.map(note =>
+              note.id === updatedNote.id ? updatedNote : note
+            )
+          );
+        } catch (error) {
+          console.error('Error updating note:', error);
+        }
+      };
+    
+      const handleDeleteNote = async (noteId) => {
+        try {
+          const response = await fetch(`/api/notes/${noteId}`, {
+            method: 'DELETE'
+          });
+    
+          if (!response.ok) {
+            throw new Error('Failed to delete note');
+          }
+    
+          setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+        } catch (error) {
+          console.error('Error deleting note:', error);
+        }
+      };
+    
+      if (isLoading) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
+            <div className="text-2xl text-gray-600">Loading...</div>
+          </div>
+        );
+      }
+    
+      if (error) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
+            <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
+              <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <button
+                onClick={() => router.push('/')}
+                className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+              >
+                Back to Home
+              </button>
+            </div>
+          </div>
+        );
+      }
+    
+      const theme = ROOM_THEMES[room?.theme || 'theme1'];
+    
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
-          <div className="text-2xl text-gray-600">Loading...</div>
-        </div>
-      );
-    }
-  
-    if (error) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
-          <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <button
-              onClick={() => router.push('/')}
-              className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600"
-            >
-              Back to Home
-            </button>
+        <div className={`min-h-screen ${theme.background}`}>
+          <div className="max-w-7xl mx-auto p-8">
+            <h1 className={`text-center mb-12 ${theme.titleStyle}`}>
+              Happy Birthday, {room?.room_name}! 🎉
+            </h1>
+            
+            <div className="relative min-h-[600px] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-8">
+              {notes.map(note => (
+                <Note
+                  key={note.id}
+                  note={note}
+                  onUpdate={handleUpdateNote}
+                  onDelete={handleDeleteNote}
+                />
+              ))}
+              
+              <button
+                onClick={handleAddNote}
+                className={`fixed bottom-8 right-8 ${theme.buttonStyle} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2`}
+              >
+                <span className="text-xl">+</span>
+                <span>Add Note</span>
+              </button>
+            </div>
           </div>
         </div>
       );
     }
-  
-    if (!room) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
-          <div className="text-2xl text-gray-600">Room not found</div>
-        </div>
-      );
-    }
-  
-    const theme = ROOM_THEMES[room.theme || 'theme1'];
-
-  return (
-    <div className={`min-h-screen ${theme.background}`}>
-      <div className="max-w-7xl mx-auto p-8">
-        <h1 className={`text-center mb-12 ${theme.titleStyle}`}>
-          Happy Birthday, {room.room_name}! 🎉
-        </h1>
-        
-        <div className="relative min-h-[600px] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-8">
-          {notes.map(note => (
-            <Note
-              key={note.id}
-              note={note}
-              onUpdate={updateNote}
-              onDelete={deleteNote}
-            />
-          ))}
-          
-          <button
-            onClick={addNote}
-            className={`fixed bottom-8 right-8 ${theme.buttonStyle} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform`}
-          >
-            + Add Note
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
