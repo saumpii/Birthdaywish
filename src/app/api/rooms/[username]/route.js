@@ -7,23 +7,28 @@ export async function GET(request, { params }) {
   try {
     const session = await getServerSession();
     const username = params.username;
+    const userEmail = session?.user?.email;
 
-    // Get room details with permissions
+    // Get room details
     const { rows } = await sql`
       SELECT 
         r.*,
-        r.admin_email = ${session?.user?.email} as is_admin,
-        EXISTS (
-          SELECT 1 
-          FROM room_members rm 
-          WHERE rm.room_id = r.id 
-          AND rm.email = ${session?.user?.email}
-        ) as can_edit,
-        array_agg(DISTINCT rm.email) as invited_members
+        CASE 
+          WHEN r.admin_email = ${userEmail} THEN true
+          ELSE false
+        END as is_admin,
+        CASE 
+          WHEN r.admin_email = ${userEmail} THEN true
+          WHEN EXISTS (
+            SELECT 1 
+            FROM room_members rm 
+            WHERE rm.room_id = r.id 
+            AND rm.email = ${userEmail}
+          ) THEN true
+          ELSE false
+        END as can_edit
       FROM rooms r
-      LEFT JOIN room_members rm ON r.id = rm.room_id
       WHERE r.username = ${username}
-      GROUP BY r.id
     `;
 
     if (rows.length === 0) {
@@ -33,7 +38,14 @@ export async function GET(request, { params }) {
       );
     }
 
-    return NextResponse.json(rows[0]);
+    // If user is not logged in, return room data with view-only permissions
+    const roomData = rows[0];
+    if (!session) {
+      roomData.is_admin = false;
+      roomData.can_edit = false;
+    }
+
+    return NextResponse.json(roomData);
   } catch (error) {
     console.error('Error fetching room:', error);
     return NextResponse.json(

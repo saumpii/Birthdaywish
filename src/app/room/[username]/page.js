@@ -37,62 +37,67 @@ const ROOM_THEMES = {
     }
   };
 
-const Note = ({ note, onUpdate, onDelete }) => {
-  const [content, setContent] = useState(note.content);
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleDragStop = (e, data) => {
-    onUpdate({
-      ...note,
-      position_x: data.x,
-      position_y: data.y
-    });
-  };
-
-  const handleContentUpdate = () => {
-    setIsEditing(false);
-    onUpdate({
-      ...note,
-      content
-    });
-  };
-
-  return (
-    <Draggable
-      defaultPosition={{ x: note.position_x, y: note.position_y }}
-      onStop={handleDragStop}
-      bounds="parent"
-    >
-      <div className={`absolute w-48 h-48 ${ROOM_THEMES[note.theme].noteStyle} rounded-lg shadow-xl cursor-move`}>
-        <div className="p-2 h-full">
-          {isEditing ? (
-            <textarea
-              className="w-full h-full p-2 bg-transparent resize-none focus:outline-none"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onBlur={handleContentUpdate}
-              autoFocus
-            />
-          ) : (
-            <div
-              onClick={() => setIsEditing(true)}
-              className="w-full h-full p-2 overflow-auto"
-            >
-              {content}
-            </div>
-          )}
-          <button
-            onClick={() => onDelete(note.id)}
-            className="absolute top-1 right-1 text-red-500 opacity-0 group-hover:opacity-100"
-          >
-            ×
-          </button>
+  const Note = ({ note, onUpdate, onDelete }) => {
+    const [content, setContent] = useState(note.content);
+    const [isEditing, setIsEditing] = useState(false);
+    const isViewOnly = !onUpdate && !onDelete;
+  
+    const handleDragStop = (e, data) => {
+      if (onUpdate) {
+        onUpdate({
+          ...note,
+          position_x: data.x,
+          position_y: data.y
+        });
+      }
+    };
+  
+    return (
+      <Draggable
+        defaultPosition={{ x: note.position_x, y: note.position_y }}
+        onStop={handleDragStop}
+        disabled={isViewOnly}
+        bounds="parent"
+        handle=".drag-handle"
+      >
+        <div className={`absolute w-48 ${ROOM_THEMES[note.theme || 'theme1'].noteStyle} rounded-lg shadow-lg`}>
+          <div className={`drag-handle h-6 bg-gray-100/50 rounded-t-lg ${isViewOnly ? 'cursor-default' : 'cursor-move'}`} />
+          <div className="relative p-3">
+            {isEditing ? (
+              <textarea
+                className="w-full h-32 p-2 bg-transparent resize-none focus:outline-none border rounded"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onBlur={() => {
+                  setIsEditing(false);
+                  if (content !== note.content && onUpdate) {
+                    onUpdate({ ...note, content });
+                  }
+                }}
+                autoFocus
+              />
+            ) : (
+              <div
+                onClick={() => !isViewOnly && setIsEditing(true)}
+                className={`w-full h-32 p-2 ${isViewOnly ? 'cursor-default' : 'cursor-text'} overflow-auto`}
+              >
+                {content}
+              </div>
+            )}
+            {!isViewOnly && onDelete && (
+              <button
+                onClick={() => onDelete(note.id)}
+                className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center text-red-500 opacity-0 hover:opacity-100 transition-opacity rounded-full hover:bg-red-100"
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-    </Draggable>
-  );
-};
-
+      </Draggable>
+    );
+  };
+  
 const InviteUsers = ({ isAdmin, roomId }) => {
     const [email, setEmail] = useState('');
     const [isInviting, setIsInviting] = useState(false);
@@ -162,15 +167,18 @@ export default function Room({ params }) {
         const fetchRoom = async () => {
           try {
             setIsLoading(true);
+            setError(null);
+            
             const response = await fetch(`/api/rooms/${params.username}`);
             
             if (!response.ok) {
               throw new Error(response.status === 404 ? 'Room not found' : 'Failed to fetch room');
             }
-    
+      
             const data = await response.json();
             setRoom(data);
             
+            // Fetch notes regardless of auth status
             if (data.id) {
               const notesResponse = await fetch(`/api/notes/${data.id}`);
               if (!notesResponse.ok) {
@@ -186,7 +194,7 @@ export default function Room({ params }) {
             setIsLoading(false);
           }
         };
-    
+      
         fetchRoom();
       }, [params.username]);
     
