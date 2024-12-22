@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Draggable from 'react-draggable';
-import { ROOM_THEMES } from '@/components/RoomThemes';
+import { ROOM_THEMES } from '@/app/components/RoomThemes'
 
 const Note = ({ note, onUpdate, onDelete }) => {
   const [content, setContent] = useState(note.content);
