@@ -44,8 +44,8 @@ const Note = ({ note, onUpdate, onDelete, isMobile }) => {
     const dragBounds = isMobile ? {
         left: 0,
         top: 0,
-        right: Math.max(0, window.innerWidth - 200),
-        bottom: Math.max(0, window.innerHeight - 200)
+        right: Math.max(0, window.innerWidth - 220),
+        bottom: Math.max(0, window.innerHeight - 280)
     } : 'parent';
 
     return (
@@ -305,7 +305,7 @@ export default function Room({ params }) {
     const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
     return (
-        <div className={`min-h-screen ${theme.background} overflow-auto`} style={{ minWidth: '100vw', minHeight: '100vh' }}>
+        <div className={`min-h-screen ${theme.background}`} style={{ minWidth: '100vw', minHeight: '100vh' }}>
             <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
                 <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
                     Happy Birthday, {room?.room_name}! 🎉
@@ -328,7 +328,7 @@ export default function Room({ params }) {
                         </button>
                     )}
                 </div>
-                <div className="relative bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
+                <div className="relative bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 overflow-auto" style={{maxHeight: 'calc(100vh - 8rem)', position: 'relative'}}>
                     {notes.map((note) => (
                         <Note
                             key={note.id}
