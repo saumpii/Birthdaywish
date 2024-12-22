@@ -138,33 +138,31 @@ const InviteUsers = ({ isAdmin, roomId }) => {
     if (!isAdmin) return null;
 
     return (
-        <div className="absolute bottom-8 left-8">
-            <form onSubmit={handleInvite} className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter email to invite"
-                        className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        disabled={isInviting}
-                        className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50 whitespace-nowrap"
-                    >
-                        {isInviting ? 'Inviting...' : 'Invite User'}
-                    </button>
-                </div>
-                {error && (
-                    <p className="text-red-500 text-sm">{error}</p>
-                )}
-                {success && (
-                    <p className="text-green-500 text-sm">{success}</p>
-                )}
-            </form>
-        </div>
+        <form onSubmit={handleInvite} className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+                <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter email to invite"
+                    className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
+                    required
+                />
+                <button
+                    type="submit"
+                    disabled={isInviting}
+                    className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50 whitespace-nowrap"
+                >
+                    {isInviting ? 'Inviting...' : 'Invite User'}
+                </button>
+            </div>
+            {error && (
+                <p className="text-red-500 text-sm">{error}</p>
+            )}
+            {success && (
+                <p className="text-green-500 text-sm">{success}</p>
+            )}
+        </form>
     );
 };
 
@@ -174,43 +172,6 @@ export default function Room({ params }) {
     const [notes, setNotes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [orientation, setOrientation] = useState('landscape');
-
-    useEffect(() => {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-        if (isMobile) {
-            if (screen.orientation?.lock) {
-                screen.orientation.lock('landscape').catch((err) => console.log('Orientation lock failed:', err));
-            }
-
-            const handleOrientation = () => {
-                setOrientation(window.orientation === 0 || window.orientation === 180 ? 'portrait' : 'landscape');
-            };
-
-            window.addEventListener('orientationchange', handleOrientation);
-            handleOrientation();
-
-            return () => {
-                window.removeEventListener('orientationchange', handleOrientation);
-                if (screen.orientation?.unlock) {
-                    screen.orientation.unlock();
-                }
-            };
-        }
-    }, []);
-
-    if (orientation === 'portrait') {
-        return (
-            <div className="fixed inset-0 bg-purple-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg shadow-xl p-6 text-center max-w-sm">
-                    <div className="text-4xl mb-4">📱</div>
-                    <h2 className="text-xl font-bold mb-2">Please Rotate Your Device</h2>
-                    <p className="text-gray-600">For the best experience, please view this room in landscape mode.</p>
-                </div>
-            </div>
-        );
-    }
 
     useEffect(() => {
         const fetchRoom = async () => {
@@ -344,15 +305,15 @@ export default function Room({ params }) {
     const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
     return (
-        <div className={`min-h-screen ${theme.background}`}>
+        <div className={`min-h-screen ${theme.background} overflow-x-auto`}>
             <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
                 <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
                     Happy Birthday, {room?.room_name}! 🎉
                 </h1>
             </div>
 
-            <div className="relative min-h-[calc(100vh-4rem)] p-4 overflow-x-hidden">
-                <div className="max-w-7xl mx-auto relative">
+            <div className="relative min-h-[calc(100vh-4rem)] p-4 overflow-x-auto">
+                <div className="flex max-w-max mx-auto relative">
                     <div className="relative min-h-[60vh] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
                         {notes.map((note) => (
                             <Note
@@ -360,28 +321,27 @@ export default function Room({ params }) {
                                 note={note}
                                 onUpdate={room?.can_edit ? handleUpdateNote : undefined}
                                 onDelete={room?.can_edit ? handleDeleteNote : undefined}
-                                isMobile={orientation === 'landscape'}
+                                isMobile={true}
                             />
                         ))}
                     </div>
-
-                    <div className="fixed bottom-4 right-4 flex flex-col gap-2">
-                        {room?.can_edit && (
-                            <button
-                                onClick={handleAddNote}
-                                className={`${theme.buttonStyle} text-white p-3 rounded-full shadow-lg hover:scale-105 transition-transform`}
-                            >
-                                <span className="text-2xl">+</span>
-                            </button>
-                        )}
-                    </div>
-
-                    {room?.is_admin && (
-                        <div className="fixed bottom-4 left-4">
-                            <InviteUsers isAdmin={true} roomId={room.id} />
-                        </div>
-                    )}
                 </div>
+            </div>
+
+            <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-md flex justify-between items-center">
+                {room?.can_edit && (
+                    <button
+                        onClick={handleAddNote}
+                        className={`${theme.buttonStyle} text-white p-3 rounded-full shadow-lg hover:scale-105 transition-transform`}
+                    >
+                        <span className="text-2xl">+</span>
+                    </button>
+                )}
+                {room?.is_admin && (
+                    <div>
+                        <InviteUsers isAdmin={true} roomId={room.id} />
+                    </div>
+                )}
             </div>
         </div>
     );
