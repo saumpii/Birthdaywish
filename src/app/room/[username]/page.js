@@ -2,108 +2,156 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useParams } from 'next/navigation';
+import Draggable from 'react-draggable';
+import { ROOM_THEMES } from '@/components/RoomThemes';
 
 const Note = ({ note, onUpdate, onDelete }) => {
-  const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(note.content);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleDragStop = (e, data) => {
+    onUpdate({
+      ...note,
+      position_x: data.x,
+      position_y: data.y
+    });
+  };
+
+  const handleContentUpdate = () => {
+    setIsEditing(false);
+    onUpdate({
+      ...note,
+      content
+    });
+  };
 
   return (
-    <div
-      className="absolute"
-      style={{
-        left: note.x,
-        top: note.y,
-        transform: `rotate(${Math.random() * 6 - 3}deg)`
-      }}
+    <Draggable
+      defaultPosition={{ x: note.position_x, y: note.position_y }}
+      onStop={handleDragStop}
+      bounds="parent"
     >
-      <div className="w-48 h-48 bg-yellow-100 p-4 rounded shadow-lg cursor-move">
-        {isEditing ? (
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onBlur={() => {
-              setIsEditing(false);
-              onUpdate({ ...note, content });
-            }}
-            className="w-full h-full bg-transparent resize-none focus:outline-none"
-            autoFocus
-          />
-        ) : (
-          <div
-            onClick={() => setIsEditing(true)}
-            className="w-full h-full overflow-auto"
+      <div className={`absolute w-48 h-48 ${ROOM_THEMES[note.theme].noteStyle} rounded-lg shadow-xl cursor-move`}>
+        <div className="p-2 h-full">
+          {isEditing ? (
+            <textarea
+              className="w-full h-full p-2 bg-transparent resize-none focus:outline-none"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onBlur={handleContentUpdate}
+              autoFocus
+            />
+          ) : (
+            <div
+              onClick={() => setIsEditing(true)}
+              className="w-full h-full p-2 overflow-auto"
+            >
+              {content}
+            </div>
+          )}
+          <button
+            onClick={() => onDelete(note.id)}
+            className="absolute top-1 right-1 text-red-500 opacity-0 group-hover:opacity-100"
           >
-            {content}
-          </div>
-        )}
-        <button
-          onClick={() => onDelete(note.id)}
-          className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100"
-        >
-          ×
-        </button>
+            ×
+          </button>
+        </div>
       </div>
-    </div>
+    </Draggable>
   );
 };
 
-export default function Room() {
-  const { username } = useParams();
-  const { data: session, status } = useSession();
+export default function Room({ params }) {
+  const { data: session } = useSession();
   const [room, setRoom] = useState(null);
   const [notes, setNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch room data and notes
-    // This would be replaced with actual API calls
-    setRoom({
-      theme: 'theme1',
-      name: 'Birthday Room',
-      adminEmail: 'admin@example.com'
-    });
-    setNotes([]);
-    setIsLoading(false);
-  }, [username]);
-
-  const addNote = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const newNote = {
-      id: Date.now(),
-      content: '',
-      x,
-      y,
-      author: session?.user?.email
+    const fetchRoom = async () => {
+      try {
+        const response = await fetch(`/api/rooms/${params.username}`);
+        const data = await response.json();
+        setRoom(data);
+        
+        // Fetch notes
+        const notesResponse = await fetch(`/api/notes/${data.id}`);
+        const notesData = await notesResponse.json();
+        setNotes(notesData);
+      } catch (error) {
+        console.error('Error fetching room:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setNotes([...notes, newNote]);
+    fetchRoom();
+  }, [params.username]);
+
+  const addNote = async () => {
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: room.id,
+          content: '',
+          position_x: Math.random() * 500,
+          position_y: Math.random() * 300,
+          authorEmail: session?.user?.email,
+          theme: room.theme
+        })
+      });
+
+      const newNote = await response.json();
+      setNotes([...notes, newNote]);
+    } catch (error) {
+      console.error('Error adding note:', error);
+    }
   };
 
-  const updateNote = (updatedNote) => {
-    setNotes(notes.map(note => 
-      note.id === updatedNote.id ? updatedNote : note
-    ));
+  const updateNote = async (updatedNote) => {
+    try {
+      await fetch(`/api/notes/${updatedNote.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedNote)
+      });
+
+      setNotes(notes.map(note => 
+        note.id === updatedNote.id ? updatedNote : note
+      ));
+    } catch (error) {
+      console.error('Error updating note:', error);
+    }
   };
 
-  const deleteNote = (noteId) => {
-    setNotes(notes.filter(note => note.id !== noteId));
+  const deleteNote = async (noteId) => {
+    try {
+      await fetch(`/api/notes/${noteId}`, {
+        method: 'DELETE'
+      });
+
+      setNotes(notes.filter(note => note.id !== noteId));
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const theme = ROOM_THEMES[room.theme];
 
   return (
-    <div className={`min-h-screen pt-16 ${room?.theme}`}>
-      <div className="max-w-7xl mx-auto p-4">
-        <h1 className="text-4xl font-bold text-center mb-8">{room?.name}</h1>
+    <div className={`min-h-screen ${theme.background}`}>
+      <div className="max-w-7xl mx-auto p-8">
+        <h1 className={`text-center mb-12 ${theme.titleStyle}`}>
+          Happy Birthday, {room.room_name}! 🎉
+        </h1>
         
-        <div
-          onClick={addNote}
-          className="relative min-h-[600px] bg-white/50 rounded-lg shadow-lg p-8"
-        >
+        <div className="relative min-h-[600px] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-8">
           {notes.map(note => (
             <Note
               key={note.id}
@@ -113,21 +161,12 @@ export default function Room() {
             />
           ))}
           
-          <div className="absolute bottom-4 right-4">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                addNote({
-                  clientX: window.innerWidth / 2,
-                  clientY: window.innerHeight / 2,
-                  currentTarget: e.currentTarget.parentElement.parentElement
-                });
-              }}
-              className="bg-purple-500 text-white p-4 rounded-full shadow-lg hover:bg-purple-600 transition-colors"
-            >
-              + Add Note
-            </button>
-          </div>
+          <button
+            onClick={addNote}
+            className={`fixed bottom-8 right-8 ${theme.buttonStyle} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform`}
+          >
+            + Add Note
+          </button>
         </div>
       </div>
     </div>
