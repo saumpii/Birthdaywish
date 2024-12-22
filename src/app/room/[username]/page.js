@@ -37,66 +37,7 @@ const ROOM_THEMES = {
     }
   };
 
-  const Note = ({ note, onUpdate, onDelete }) => {
-    const [content, setContent] = useState(note.content);
-    const [isEditing, setIsEditing] = useState(false);
-    const isViewOnly = !onUpdate && !onDelete;
-  
-    const handleDragStop = (e, data) => {
-      if (onUpdate) {
-        onUpdate({
-          ...note,
-          position_x: data.x,
-          position_y: data.y
-        });
-      }
-    };
-  
-    return (
-      <Draggable
-        defaultPosition={{ x: note.position_x, y: note.position_y }}
-        onStop={handleDragStop}
-        disabled={isViewOnly}
-        bounds="parent"
-        handle=".drag-handle"
-      >
-        <div className={`absolute w-48 ${ROOM_THEMES[note.theme || 'theme1'].noteStyle} rounded-lg shadow-lg`}>
-          <div className={`drag-handle h-6 bg-gray-100/50 rounded-t-lg ${isViewOnly ? 'cursor-default' : 'cursor-move'}`} />
-          <div className="relative p-3">
-            {isEditing ? (
-              <textarea
-                className="w-full h-32 p-2 bg-transparent resize-none focus:outline-none border rounded"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                onBlur={() => {
-                  setIsEditing(false);
-                  if (content !== note.content && onUpdate) {
-                    onUpdate({ ...note, content });
-                  }
-                }}
-                autoFocus
-              />
-            ) : (
-              <div
-                onClick={() => !isViewOnly && setIsEditing(true)}
-                className={`w-full h-32 p-2 ${isViewOnly ? 'cursor-default' : 'cursor-text'} overflow-auto`}
-              >
-                {content}
-              </div>
-            )}
-            {!isViewOnly && onDelete && (
-              <button
-                onClick={() => onDelete(note.id)}
-                className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center text-red-500 opacity-0 hover:opacity-100 transition-opacity rounded-full hover:bg-red-100"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
-      </Draggable>
-    );
-  };
+ 
 
   const InviteUsers = ({ isAdmin, roomId }) => {
     const [email, setEmail] = useState('');
@@ -174,7 +115,57 @@ export default function Room({ params }) {
     const [notes, setNotes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [orientation, setOrientation] = useState('landscape');
   
+    useEffect(() => {
+        // Check if we're on mobile
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+        if (isMobile) {
+          // Force landscape on mobile
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape')
+              .catch((err) => console.log('Orientation lock failed:', err));
+          }
+    
+          // Listen for orientation changes
+          const handleOrientation = () => {
+            if (window.orientation === 0 || window.orientation === 180) {
+              setOrientation('portrait');
+            } else {
+              setOrientation('landscape');
+            }
+          };
+    
+          window.addEventListener('orientationchange', handleOrientation);
+          handleOrientation(); // Initial check
+    
+          return () => {
+            window.removeEventListener('orientationchange', handleOrientation);
+            // Unlock orientation when component unmounts
+            if (screen.orientation && screen.orientation.unlock) {
+              screen.orientation.unlock();
+            }
+          };
+        }
+      }, []);
+    
+      // Show orientation message if in portrait mode on mobile
+      if (orientation === 'portrait') {
+        return (
+          <div className="fixed inset-0 bg-purple-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl p-6 text-center max-w-sm">
+              <div className="text-4xl mb-4">📱</div>
+              <h2 className="text-xl font-bold mb-2">Please Rotate Your Device</h2>
+              <p className="text-gray-600">
+                For the best experience, please view this room in landscape mode.
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+    
     useEffect(() => {
         const fetchRoom = async () => {
           try {
@@ -310,36 +301,50 @@ export default function Room({ params }) {
       const theme = ROOM_THEMES[room?.theme || 'theme1'];
     
       return (
-        <div className={`min-h-screen ${theme.background}`}>
-          <div className="max-w-7xl mx-auto p-8">
-            <h1 className={`text-center mb-12 ${theme.titleStyle}`}>
-              Happy Birthday, {room?.room_name}! 🎉
-            </h1>
-            
-            <div className="relative min-h-[600px] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-8">
+        <div className={`min-h-screen ${ROOM_THEMES[room?.theme || 'theme1'].background}`}>
+        {/* Mobile-optimized header */}
+        <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
+          <h1 className={`text-xl md:text-3xl font-bold text-center ${ROOM_THEMES[room?.theme || 'theme1'].titleStyle}`}>
+            Happy Birthday, {room?.room_name}! 🎉
+          </h1>
+        </div>
+  
+        {/* Main content area with notes */}
+        <div className="relative min-h-[calc(100vh-4rem)] p-4 overflow-x-hidden">
+          <div className="max-w-7xl mx-auto relative">
+            {/* Notes container with proper mobile handling */}
+            <div className="relative min-h-[60vh] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
               {notes.map(note => (
                 <Note
                   key={note.id}
                   note={note}
                   onUpdate={room?.can_edit ? handleUpdateNote : undefined}
                   onDelete={room?.can_edit ? handleDeleteNote : undefined}
+                  isMobile={orientation === 'landscape'}
                 />
               ))}
-              
+            </div>
+  
+            {/* Mobile-optimized controls */}
+            <div className="fixed bottom-4 right-4 flex flex-col gap-2">
               {room?.can_edit && (
                 <button
                   onClick={handleAddNote}
-                  className={`fixed bottom-8 right-8 ${theme.buttonStyle} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2`}
+                  className={`${ROOM_THEMES[room.theme].buttonStyle} text-white p-3 rounded-full shadow-lg hover:scale-105 transition-transform`}
                 >
-                  <span className="text-xl">+</span>
-                  <span>Add Note</span>
+                  <span className="text-2xl">+</span>
                 </button>
               )}
-    
-              
             </div>
+  
+            {/* Admin controls - only shown to admins */}
+            {room?.is_admin && (
+              <div className="fixed bottom-4 left-4">
+                <InviteUsers isAdmin={true} roomId={room.id} />
+              </div>
+            )}
           </div>
-          <InviteUsers isAdmin={room?.is_admin} roomId={room?.id} />
         </div>
+      </div>
       );
     }

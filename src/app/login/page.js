@@ -8,10 +8,10 @@ export default function Login() {
       <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Welcome Back!
+            Welcome!
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to create and share birthday wishes
+            Sign in to create a Birthday Room
           </p>
         </div>
         
