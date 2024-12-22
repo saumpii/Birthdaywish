@@ -1,6 +1,7 @@
 // src/app/room/[username]/page.js
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Draggable from 'react-draggable';
 
