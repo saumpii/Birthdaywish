@@ -97,16 +97,18 @@ const ROOM_THEMES = {
       </Draggable>
     );
   };
-  
-const InviteUsers = ({ isAdmin, roomId }) => {
+
+  const InviteUsers = ({ isAdmin, roomId }) => {
     const [email, setEmail] = useState('');
     const [isInviting, setIsInviting] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
   
     const handleInvite = async (e) => {
       e.preventDefault();
       setIsInviting(true);
       setError('');
+      setSuccess('');
   
       try {
         const response = await fetch('/api/rooms/invite', {
@@ -118,10 +120,13 @@ const InviteUsers = ({ isAdmin, roomId }) => {
           })
         });
   
+        const data = await response.json();
+  
         if (!response.ok) {
-          throw new Error('Failed to invite user');
+          throw new Error(data.error || 'Failed to invite user');
         }
   
+        setSuccess(`Successfully invited ${email}`);
         setEmail('');
       } catch (err) {
         setError(err.message);
@@ -134,28 +139,35 @@ const InviteUsers = ({ isAdmin, roomId }) => {
   
     return (
       <div className="absolute bottom-8 left-8">
-        <form onSubmit={handleInvite} className="flex items-center gap-2">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter email to invite"
-            className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
-            required
-          />
-          <button
-            type="submit"
-            disabled={isInviting}
-            className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50"
-          >
-            {isInviting ? 'Inviting...' : 'Invite'}
-          </button>
+        <form onSubmit={handleInvite} className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email to invite"
+              className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
+              required
+            />
+            <button
+              type="submit"
+              disabled={isInviting}
+              className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50 whitespace-nowrap"
+            >
+              {isInviting ? 'Inviting...' : 'Invite User'}
+            </button>
+          </div>
+          {error && (
+            <p className="text-red-500 text-sm">{error}</p>
+          )}
+          {success && (
+            <p className="text-green-500 text-sm">{success}</p>
+          )}
         </form>
-        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
       </div>
     );
   };
-
+  
 export default function Room({ params }) {
     const router = useRouter();
     const [room, setRoom] = useState(null);
