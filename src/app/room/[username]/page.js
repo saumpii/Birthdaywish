@@ -167,7 +167,7 @@ const ROOM_THEMES = {
       </div>
     );
   };
-  
+
 export default function Room({ params }) {
     const router = useRouter();
     const [room, setRoom] = useState(null);
@@ -336,9 +336,10 @@ export default function Room({ params }) {
                 </button>
               )}
     
-              <InviteUsers isAdmin={room?.is_admin} roomId={room?.id} />
+              
             </div>
           </div>
+          <InviteUsers isAdmin={room?.is_admin} roomId={room?.id} />
         </div>
       );
     }
