@@ -305,41 +305,41 @@ export default function Room({ params }) {
     const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
     return (
-        <div className={`min-h-screen ${theme.background}`} style={{ minWidth: '100vw', minHeight: '100vh' }}>
-            <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
-                <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
-                    Happy Birthday, {room?.room_name}! 🎉
-                </h1>
-            </div>
-
-            <div className="relative min-h-[calc(100vh-4rem)] p-4">
-                <div className="flex justify-between items-center mb-4">
-                    {room?.is_admin && (
-                        <div>
-                            <InviteUsers isAdmin={true} roomId={room.id} />
-                        </div>
-                    )}
-                    {room?.can_edit && (
-                        <button
-                            onClick={handleAddNote}
-                            className={`${theme.buttonStyle} text-white p-3 rounded-full shadow-lg hover:scale-105 transition-transform`}
-                        >
-                            <span className="text-2xl">+</span>
-                        </button>
-                    )}
-                </div>
-                <div className="relative bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 overflow-auto" style={{maxHeight: 'calc(100vh - 8rem)', position: 'relative'}}>
-                    {notes.map((note) => (
-                        <Note
-                            key={note.id}
-                            note={note}
-                            onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-                            onDelete={room?.can_edit ? handleDeleteNote : undefined}
-                            isMobile={true}
-                        />
-                    ))}
-                </div>
-            </div>
+        <div className={`min-h-screen ${theme.background} flex flex-col`}>
+        <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
+          <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
+            Happy Birthday, {room?.room_name}! 🎉
+          </h1>
         </div>
+  
+        <div className="flex-grow p-4">
+          <div className="flex justify-between items-center mb-4">
+            {room?.is_admin && (
+              <div>
+                <InviteUsers isAdmin={true} roomId={room.id} />
+              </div>
+            )}
+            {room?.can_edit && (
+              <button
+                onClick={handleAddNote}
+                className={`${theme.buttonStyle} text-white p-3 rounded-full shadow-lg hover:scale-105 transition-transform`}
+              >
+                <span className="text-2xl">+</span>
+              </button>
+            )}
+          </div>
+          <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 overflow-auto h-full">
+            {notes.map((note) => (
+              <Note
+                key={note.id}
+                note={note}
+                onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+                onDelete={room?.can_edit ? handleDeleteNote : undefined}
+                isMobile={true}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     );
 }
