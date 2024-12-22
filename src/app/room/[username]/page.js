@@ -93,6 +93,64 @@ const Note = ({ note, onUpdate, onDelete }) => {
   );
 };
 
+const InviteUsers = ({ isAdmin, roomId }) => {
+    const [email, setEmail] = useState('');
+    const [isInviting, setIsInviting] = useState(false);
+    const [error, setError] = useState('');
+  
+    const handleInvite = async (e) => {
+      e.preventDefault();
+      setIsInviting(true);
+      setError('');
+  
+      try {
+        const response = await fetch('/api/rooms/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomId,
+            email: email.trim()
+          })
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to invite user');
+        }
+  
+        setEmail('');
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsInviting(false);
+      }
+    };
+  
+    if (!isAdmin) return null;
+  
+    return (
+      <div className="absolute bottom-8 left-8">
+        <form onSubmit={handleInvite} className="flex items-center gap-2">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter email to invite"
+            className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
+            required
+          />
+          <button
+            type="submit"
+            disabled={isInviting}
+            className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50"
+          >
+            {isInviting ? 'Inviting...' : 'Invite'}
+          </button>
+        </form>
+        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      </div>
+    );
+  };
+
 export default function Room({ params }) {
     const router = useRouter();
     const [room, setRoom] = useState(null);
@@ -101,48 +159,45 @@ export default function Room({ params }) {
     const [error, setError] = useState(null);
   
     useEffect(() => {
-      const fetchRoom = async () => {
-        try {
-          setIsLoading(true);
-          const response = await fetch(`/api/rooms/${params.username}`);
-          
-          if (!response.ok) {
-            if (response.status === 404) {
-              throw new Error('Room not found');
+        const fetchRoom = async () => {
+          try {
+            setIsLoading(true);
+            const response = await fetch(`/api/rooms/${params.username}`);
+            
+            if (!response.ok) {
+              throw new Error(response.status === 404 ? 'Room not found' : 'Failed to fetch room');
             }
-            throw new Error('Failed to fetch room');
-          }
-  
-          const data = await response.json();
-          setRoom(data);
-          
-          // Only fetch notes if we have a room
-          if (data.id) {
-            const notesResponse = await fetch(`/api/notes/${data.id}`);
-            if (!notesResponse.ok) {
-              throw new Error('Failed to fetch notes');
+    
+            const data = await response.json();
+            setRoom(data);
+            
+            if (data.id) {
+              const notesResponse = await fetch(`/api/notes/${data.id}`);
+              if (!notesResponse.ok) {
+                throw new Error('Failed to fetch notes');
+              }
+              const notesData = await notesResponse.json();
+              setNotes(notesData);
             }
-            const notesData = await notesResponse.json();
-            setNotes(notesData);
+          } catch (error) {
+            console.error('Error:', error);
+            setError(error.message);
+          } finally {
+            setIsLoading(false);
           }
-        } catch (error) {
-          console.error('Error:', error);
-          setError(error.message);
-        } finally {
-          setIsLoading(false);
-        }
-      };
+        };
+    
+        fetchRoom();
+      }, [params.username]);
+    
   
-      fetchRoom();
-    }, [params.username]);
-  
-    const handleAddNote = async () => {
-        if (!room?.id) return;
+      const handleAddNote = async () => {
+        if (!room?.id || !room.can_edit) return;
     
         try {
           const initialPosition = {
-            x: Math.floor(Math.random() * (window.innerWidth / 2)), // Keep notes in visible area
-            y: Math.floor(Math.random() * 300) // Keep notes near the top
+            x: Math.floor(Math.random() * (window.innerWidth / 2)),
+            y: Math.floor(Math.random() * 300)
           };
     
           const response = await fetch('/api/notes', {
@@ -165,9 +220,9 @@ export default function Room({ params }) {
           setNotes(prevNotes => [...prevNotes, newNote]);
         } catch (error) {
           console.error('Error adding note:', error);
-          // Optionally add user feedback here
         }
       };
+    
     
       const handleUpdateNote = async (updatedNote) => {
         try {
@@ -246,18 +301,22 @@ export default function Room({ params }) {
                 <Note
                   key={note.id}
                   note={note}
-                  onUpdate={handleUpdateNote}
-                  onDelete={handleDeleteNote}
+                  onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+                  onDelete={room?.can_edit ? handleDeleteNote : undefined}
                 />
               ))}
               
-              <button
-                onClick={handleAddNote}
-                className={`fixed bottom-8 right-8 ${theme.buttonStyle} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2`}
-              >
-                <span className="text-xl">+</span>
-                <span>Add Note</span>
-              </button>
+              {room?.can_edit && (
+                <button
+                  onClick={handleAddNote}
+                  className={`fixed bottom-8 right-8 ${theme.buttonStyle} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2`}
+                >
+                  <span className="text-xl">+</span>
+                  <span>Add Note</span>
+                </button>
+              )}
+    
+              <InviteUsers isAdmin={room?.is_admin} roomId={room?.id} />
             </div>
           </div>
         </div>

@@ -1,15 +1,7 @@
-// src/app/create-room/page.js
 'use client';
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-const ROOM_THEMES = [
-  { id: 'theme1', name: 'Colorful Party', background: 'bg-gradient-to-r from-pink-200 to-purple-200' },
-  { id: 'theme2', name: 'Confetti Fun', background: 'bg-gradient-to-r from-yellow-200 to-orange-200' },
-  { id: 'theme3', name: 'Birthday Balloons', background: 'bg-gradient-to-r from-blue-200 to-indigo-200' },
-  { id: 'theme4', name: 'Cake & Gifts', background: 'bg-gradient-to-r from-green-200 to-teal-200' },
-];
+import { useSession } from 'next-auth/react';
 
 export default function CreateRoom() {
   const { data: session, status } = useSession();
@@ -17,11 +9,25 @@ export default function CreateRoom() {
   const [formData, setFormData] = useState({
     username: '',
     roomName: '',
-    theme: 'theme1',
-    invitedEmails: ''
+    theme: 'theme1'
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
+        <div className="text-2xl text-gray-600">Loading...</div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,28 +35,12 @@ export default function CreateRoom() {
     setIsLoading(true);
 
     try {
-      // Check if username is unique
-      const checkResponse = await fetch('/api/check-username', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: formData.username }),
-      });
-
-      const checkData = await checkResponse.json();
-      if (!checkData.isAvailable) {
-        setError('This username is already taken. Please choose another one.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Create room
       const response = await fetch('/api/create-room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          adminEmail: session?.user?.email,
-          invitedEmails: formData.invitedEmails.split(',').map(email => email.trim())
+          adminEmail: session?.user?.email
         }),
       });
 
@@ -67,15 +57,6 @@ export default function CreateRoom() {
     }
   };
 
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
-
-  /*if (!session) {
-    router.push('/login');
-    return null;
-  }*/
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-indigo-50 pt-20 px-4">
       <div className="max-w-2xl mx-auto">
@@ -90,68 +71,47 @@ export default function CreateRoom() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Choose a Username for Room URL
+              <label className="block text-sm font-medium mb-1">
+                Room URL Name
               </label>
               <input
                 type="text"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                placeholder="username"
+                placeholder="unique-room-name"
                 required
               />
-              <p className="mt-1 text-sm text-gray-500">
-                Your room will be available at: /room/{formData.username || 'username'}
-              </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Room Name
+              <label className="block text-sm font-medium mb-1">
+                Birthday Person's Name
               </label>
               <input
                 type="text"
                 value={formData.roomName}
                 onChange={(e) => setFormData({ ...formData, roomName: e.target.value })}
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                placeholder="Birthday Room Name"
+                placeholder="Name"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Theme
+              <label className="block text-sm font-medium mb-1">
+                Choose Theme
               </label>
-              <div className="grid grid-cols-2 gap-4">
-                {ROOM_THEMES.map((theme) => (
-                  <div
-                    key={theme.id}
-                    className={`${theme.background} p-4 rounded-lg cursor-pointer transition-all ${
-                      formData.theme === theme.id ? 'ring-2 ring-purple-500 scale-105' : ''
-                    }`}
-                    onClick={() => setFormData({ ...formData, theme: theme.id })}
-                  >
-                    {theme.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Invite People (Email Addresses)
-              </label>
-              <textarea
-                value={formData.invitedEmails}
-                onChange={(e) => setFormData({ ...formData, invitedEmails: e.target.value })}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 h-32"
-                placeholder="Enter email addresses separated by commas"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Only invited people will be able to access this room
-              </p>
+              <select
+                value={formData.theme}
+                onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="theme1">Colorful Party</option>
+                <option value="theme2">Elegant Celebration</option>
+                <option value="theme3">Fun Fiesta</option>
+                <option value="theme4">Starry Night</option>
+              </select>
             </div>
 
             <button
