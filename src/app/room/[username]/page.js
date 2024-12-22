@@ -313,35 +313,32 @@ export default function Room({ params }) {
             </div>
 
             <div className="relative min-h-[calc(100vh-4rem)] p-4 overflow-x-auto">
-                <div className="flex max-w-max mx-auto relative">
-                    <div className="relative min-h-[60vh] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
-                        {notes.map((note) => (
-                            <Note
-                                key={note.id}
-                                note={note}
-                                onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-                                onDelete={room?.can_edit ? handleDeleteNote : undefined}
-                                isMobile={true}
-                            />
-                        ))}
-                    </div>
+                <div className="flex justify-between items-center mb-4">
+                    {room?.is_admin && (
+                        <div>
+                            <InviteUsers isAdmin={true} roomId={room.id} />
+                        </div>
+                    )}
+                    {room?.can_edit && (
+                        <button
+                            onClick={handleAddNote}
+                            className={`${theme.buttonStyle} text-white p-3 rounded-full shadow-lg hover:scale-105 transition-transform`}
+                        >
+                            <span className="text-2xl">+</span>
+                        </button>
+                    )}
                 </div>
-            </div>
-
-            <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-md flex justify-between items-center">
-                {room?.can_edit && (
-                    <button
-                        onClick={handleAddNote}
-                        className={`${theme.buttonStyle} text-white p-3 rounded-full shadow-lg hover:scale-105 transition-transform`}
-                    >
-                        <span className="text-2xl">+</span>
-                    </button>
-                )}
-                {room?.is_admin && (
-                    <div>
-                        <InviteUsers isAdmin={true} roomId={room.id} />
-                    </div>
-                )}
+                <div className="relative min-h-[60vh] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
+                    {notes.map((note) => (
+                        <Note
+                            key={note.id}
+                            note={note}
+                            onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+                            onDelete={room?.can_edit ? handleDeleteNote : undefined}
+                            isMobile={true}
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     );
