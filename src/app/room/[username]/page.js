@@ -3,7 +3,38 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Draggable from 'react-draggable';
-import { ROOM_THEMES } from '@/app/components/RoomThemes'
+
+
+const ROOM_THEMES = {
+    'theme1': {
+      name: 'Colorful Party',
+      background: 'bg-gradient-to-br from-pink-300 via-purple-200 to-indigo-300',
+      titleStyle: 'text-5xl font-bold text-purple-600',
+      noteStyle: 'bg-pink-100',
+      buttonStyle: 'bg-purple-500 hover:bg-purple-600'
+    },
+    'theme2': {
+      name: 'Elegant Celebration',
+      background: 'bg-gradient-to-br from-rose-200 via-red-100 to-orange-200',
+      titleStyle: 'text-5xl font-bold text-rose-600',
+      noteStyle: 'bg-rose-50',
+      buttonStyle: 'bg-rose-500 hover:bg-rose-600'
+    },
+    'theme3': {
+      name: 'Fun Fiesta',
+      background: 'bg-gradient-to-br from-yellow-200 via-green-100 to-blue-200',
+      titleStyle: 'text-5xl font-bold text-emerald-600',
+      noteStyle: 'bg-yellow-50',
+      buttonStyle: 'bg-emerald-500 hover:bg-emerald-600'
+    },
+    'theme4': {
+      name: 'Starry Night',
+      background: 'bg-gradient-to-br from-indigo-300 via-blue-200 to-purple-300',
+      titleStyle: 'text-5xl font-bold text-indigo-600',
+      noteStyle: 'bg-blue-50',
+      buttonStyle: 'bg-indigo-500 hover:bg-indigo-600'
+    }
+  };
 
 const Note = ({ note, onUpdate, onDelete }) => {
   const [content, setContent] = useState(note.content);
@@ -62,87 +93,82 @@ const Note = ({ note, onUpdate, onDelete }) => {
 };
 
 export default function Room({ params }) {
-  const { data: session } = useSession();
-  const [room, setRoom] = useState(null);
-  const [notes, setNotes] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRoom = async () => {
-      try {
-        const response = await fetch(`/api/rooms/${params.username}`);
-        const data = await response.json();
-        setRoom(data);
-        
-        // Fetch notes
-        const notesResponse = await fetch(`/api/notes/${data.id}`);
-        const notesData = await notesResponse.json();
-        setNotes(notesData);
-      } catch (error) {
-        console.error('Error fetching room:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRoom();
-  }, [params.username]);
-
-  const addNote = async () => {
-    try {
-      const response = await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomId: room.id,
-          content: '',
-          position_x: Math.random() * 500,
-          position_y: Math.random() * 300,
-          authorEmail: session?.user?.email,
-          theme: room.theme
-        })
-      });
-
-      const newNote = await response.json();
-      setNotes([...notes, newNote]);
-    } catch (error) {
-      console.error('Error adding note:', error);
+    const [room, setRoom] = useState(null);
+    const [notes, setNotes] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const router = useRouter();
+  
+    useEffect(() => {
+      const fetchRoom = async () => {
+        try {
+          setIsLoading(true);
+          const response = await fetch(`/api/rooms/${params.username}`);
+          
+          if (!response.ok) {
+            if (response.status === 404) {
+              throw new Error('Room not found');
+            }
+            throw new Error('Failed to fetch room');
+          }
+  
+          const data = await response.json();
+          setRoom(data);
+          
+          // Only fetch notes if we have a room
+          if (data.id) {
+            const notesResponse = await fetch(`/api/notes/${data.id}`);
+            if (!notesResponse.ok) {
+              throw new Error('Failed to fetch notes');
+            }
+            const notesData = await notesResponse.json();
+            setNotes(notesData);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      fetchRoom();
+    }, [params.username]);
+  
+    if (isLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
+          <div className="text-2xl text-gray-600">Loading...</div>
+        </div>
+      );
     }
-  };
-
-  const updateNote = async (updatedNote) => {
-    try {
-      await fetch(`/api/notes/${updatedNote.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedNote)
-      });
-
-      setNotes(notes.map(note => 
-        note.id === updatedNote.id ? updatedNote : note
-      ));
-    } catch (error) {
-      console.error('Error updating note:', error);
+  
+    if (error) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button
+              onClick={() => router.push('/')}
+              className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      );
     }
-  };
-
-  const deleteNote = async (noteId) => {
-    try {
-      await fetch(`/api/notes/${noteId}`, {
-        method: 'DELETE'
-      });
-
-      setNotes(notes.filter(note => note.id !== noteId));
-    } catch (error) {
-      console.error('Error deleting note:', error);
+  
+    if (!room) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100">
+          <div className="text-2xl text-gray-600">Room not found</div>
+        </div>
+      );
     }
-  };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  const theme = ROOM_THEMES[room.theme];
+  
+    const theme = ROOM_THEMES[room.theme || 'theme1'];
 
   return (
     <div className={`min-h-screen ${theme.background}`}>
