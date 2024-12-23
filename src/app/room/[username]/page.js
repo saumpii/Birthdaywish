@@ -308,10 +308,16 @@ export default function Room({ params }) {
       </div>
 
       <div className="relative p-4 min-h-[calc(100vh-80px)]">
-        {/* Light Rectangle Container */}
-        <div className="relative h-[calc(100vh-250px)] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 overflow-hidden">
-          {/* Notes Container */}
-          <div className="absolute inset-0 p-4 overflow-hidden">
+        {/* Light Rectangle Container with both scrolls enabled */}
+        <div className="relative h-[calc(100vh-120px)] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
+          {/* Notes Container with horizontal and vertical scroll */}
+          <div className="absolute inset-0 p-4 overflow-auto touch-pan-x touch-pan-y" 
+               style={{ 
+                 minWidth: '100%', 
+                 minHeight: '100%',
+                 width: 'max(100%, 1200px)', // Ensure minimum width for horizontal scroll
+                 height: 'max(100%, 800px)'   // Ensure minimum height for vertical scroll
+               }}>
             {notes.map((note) => (
               <Note
                 key={note.id}
