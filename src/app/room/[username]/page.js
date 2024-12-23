@@ -343,58 +343,47 @@ export default function Room({ params }) {
 
   return (
     <div className={`${theme.background} min-h-screen pt-16`}>
-    {/* Fixed Header */}
-    <div className="fixed top-16 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-40">
-      <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
-        Happy Birthday, {room?.room_name}! 🎉
-      </h1>
-    </div>
+     <div className="fixed top-16 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-40">
+       <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
+         Happy Birthday, {room?.room_name}! 🎉
+       </h1>
+     </div>
 
-    {/* Main Content Area */}
-    <div className="p-4 h-[calc(100vh-180px)]">
-      {/* Notes Container */}
-      <div 
-        className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 relative h-full"
-      >
-        {/* Scrollable Area - only on mobile */}
-        <div 
-          className={`absolute inset-0 p-4 ${
-            window.innerWidth <= 768 ? 'overflow-y-auto' : 'overflow-hidden'
-          }`}
-        >
-          {adjustNotePositionsForMobile(notes).map((note) => (
-            <Note
-              key={note.id}
-              note={note}
-              onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-              onDelete={room?.can_edit ? handleDeleteNote : undefined}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+     <div className="p-4 h-[calc(100vh-180px)]">
+       <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl h-full relative">
+         <div className="absolute inset-0 overflow-y-auto overflow-x-hidden p-4">
+           <div className="relative min-h-full w-full">
+             {notes.map((note) => (
+               <Note
+                 key={note.id}
+                 note={note}
+                 onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+                 onDelete={room?.can_edit ? handleDeleteNote : undefined}
+               />
+             ))}
+           </div>
+         </div>
+       </div>
+     </div>
 
-    {/* Fixed Bottom Controls Bar */}
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg p-4 z-40">
-      <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
-        {room?.is_admin && (
-          <div className="flex-shrink-0 max-w-[60%] md:max-w-none">
-            <InviteUsers isAdmin={true} roomId={room.id} />
-          </div>
-        )}
-        
-        {room?.can_edit && (
-          <div className="flex-shrink-0 ml-auto">
-            <button
-              onClick={handleAddNote}
-              className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
-            >
-              <span className="text-2xl">+</span>
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
+     <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg p-4 z-40">
+       <div className="flex justify-between items-center gap-4">
+         {room?.is_admin && (
+           <div className="flex-shrink-0">
+             <InviteUsers isAdmin={true} roomId={room.id} />
+           </div>
+         )}
+         {room?.can_edit && (
+           <button
+             onClick={handleAddNote}
+             className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
+           >
+             <span className="text-2xl">+</span>
+           </button>
+         )}
+       </div>
+     </div>
+   </div>
+ 
   )
 }
