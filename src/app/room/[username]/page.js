@@ -206,9 +206,13 @@ export default function Room({ params }) {
     if (!room?.id || !room.can_edit) return;
 
     try {
+      // Get the scrollable container
+      const container = document.querySelector('.bg-white\\/30');
+      
+      // Calculate position considering the scroll area
       const initialPosition = {
-        x: Math.floor(Math.random() * (window.innerWidth / 2)),
-        y: Math.floor(Math.random() * 300)
+        x: Math.floor(Math.random() * (container.scrollWidth - 200)),
+        y: Math.floor(Math.random() * (container.scrollHeight - 200))
       };
 
       const response = await fetch('/api/notes', {
@@ -229,6 +233,13 @@ export default function Room({ params }) {
 
       const newNote = await response.json();
       setNotes((prevNotes) => [...prevNotes, newNote]);
+
+      // Scroll to the new note
+      container.scrollTo({
+        left: Math.max(0, initialPosition.x - window.innerWidth/2),
+        top: Math.max(0, initialPosition.y - window.innerHeight/2),
+        behavior: 'smooth'
+      });
     } catch (error) {
       console.error('Error adding note:', error);
     }
@@ -301,54 +312,69 @@ export default function Room({ params }) {
 
   return (
     <div className={`min-h-screen ${theme.background}`}>
-      <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
-        <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
-          Happy Birthday, {room?.room_name}! 🎉
-        </h1>
-      </div>
+    <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
+      <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
+        Happy Birthday, {room?.room_name}! 🎉
+      </h1>
+    </div>
 
-      <div className="relative p-4 min-h-[calc(100vh-80px)]">
-        {/* Light Rectangle Container with both scrolls enabled */}
-        <div className="relative h-[calc(100vh-120px)] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
-          {/* Notes Container with horizontal and vertical scroll */}
-          <div className="absolute inset-0 p-4 overflow-auto touch-pan-x touch-pan-y" 
-               style={{ 
-                 minWidth: '100%', 
-                 minHeight: '100%',
-                 width: 'max(100%, 1200px)', // Ensure minimum width for horizontal scroll
-                 height: 'max(100%, 800px)'   // Ensure minimum height for vertical scroll
-               }}>
-            {notes.map((note) => (
-              <Note
-                key={note.id}
-                note={note}
-                onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-                onDelete={room?.can_edit ? handleDeleteNote : undefined}
-              />
-            ))}
-          </div>
-          
-          {/* Fixed Controls */}
-          <div className="fixed bottom-6 right-6 z-20">
-            {room?.can_edit && (
-              <button
-                onClick={handleAddNote}
-                className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
-              >
-                <span className="text-2xl">+</span>
-              </button>
-            )}
-          </div>
-
-          {/* Admin Controls */}
-          {room?.is_admin && (
-            <div className="fixed bottom-6 left-6 z-20">
-              <InviteUsers isAdmin={true} roomId={room.id} />
-            </div>
-          )}
+    <div className="relative p-4">
+      {/* Main Container */}
+      <div 
+        className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl"
+        style={{
+          width: 'calc(100vw - 32px)',  // Full viewport width minus padding
+          height: 'calc(100vh - 120px)', // Full viewport height minus header and padding
+          minWidth: '100%',
+          minHeight: '100%',
+          position: 'relative',
+          overflowX: 'auto',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+        }}
+      >
+        {/* Scrollable Content Area */}
+        <div 
+          className="absolute top-0 left-0 p-4"
+          style={{
+            minWidth: '100%',
+            minHeight: '100%',
+            width: '200%',     // Allow horizontal scroll
+            height: '100%',
+            position: 'relative'
+          }}
+        >
+          {notes.map((note) => (
+            <Note
+              key={note.id}
+              note={note}
+              onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+              onDelete={room?.can_edit ? handleDeleteNote : undefined}
+            />
+          ))}
         </div>
       </div>
+
+      {/* Fixed Controls - Always visible */}
+      <div className="fixed bottom-6 right-6 z-20">
+        {room?.can_edit && (
+          <button
+            onClick={handleAddNote}
+            className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
+          >
+            <span className="text-2xl">+</span>
+          </button>
+        )}
+      </div>
+
+      {/* Admin Controls - Always visible */}
+      {room?.is_admin && (
+        <div className="fixed bottom-6 left-6 z-20">
+          <InviteUsers isAdmin={true} roomId={room.id} />
+        </div>
+      )}
     </div>
+  </div>
 
   );
 }
