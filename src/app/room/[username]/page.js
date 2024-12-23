@@ -44,17 +44,17 @@ const Note = ({ note, onUpdate, onDelete }) => {
 
   return (
     <Draggable
-      defaultPosition={{ x: note.position_x, y: note.position_y }}
-      onStop={(e, data) => onUpdate && onUpdate({
-        ...note,
-        position_x: data.x,
-        position_y: data.y
-      })}
-      bounds="parent"
-      disabled={!onUpdate}
-      handle=".drag-handle"
-      nodeRef={nodeRef}
-    >
+    defaultPosition={{ x: Math.floor(note.position_x), y: Math.floor(note.position_y) }}
+    onStop={(e, data) => onUpdate && onUpdate({
+      ...note,
+      position_x: Math.floor(data.x),
+      position_y: Math.floor(data.y)
+    })}
+    bounds="parent"
+    disabled={!onUpdate}
+    handle=".drag-handle"
+    nodeRef={nodeRef}
+  >
       <div ref={nodeRef} className={`absolute w-40 md:w-48 ${note.theme ? ROOM_THEMES[note.theme].noteStyle : 'bg-yellow-100'} rounded-lg shadow-lg`}>
         <div className="drag-handle h-6 bg-gray-100/50 rounded-t-lg" />
         <div className="relative p-3">
@@ -174,12 +174,12 @@ export default function Room({ params }) {
     if (!isMobile) return notes;
   
     const mobileNotes = [...notes];
-    const containerWidth = window.innerWidth - 100; // Account for padding
+    const containerWidth = Math.floor(window.innerWidth - 100); // Account for padding
   
     mobileNotes.forEach(note => {
       if (note.position_x > containerWidth) {
         // If note is beyond screen width, bring it into view
-        note.position_x = Math.random() * (containerWidth - 200);
+        note.position_x = Math.floor(Math.random() * (containerWidth - 200));
       }
     });
   
@@ -230,9 +230,9 @@ export default function Room({ params }) {
       
       const initialPosition = {
         x: isMobile 
-          ? Math.min(Math.random() * (window.innerWidth - 300), window.innerWidth - 200)
-          : Math.random() * (window.innerWidth - 300),
-        y: Math.random() * (container.clientHeight - 200)
+          ? Math.floor(Math.min(Math.random() * (window.innerWidth - 300), window.innerWidth - 200))
+          : Math.floor(Math.random() * (window.innerWidth - 300)),
+        y: Math.floor(Math.random() * (container.clientHeight - 200))
       };
 
       const response = await fetch('/api/notes', {
@@ -248,7 +248,8 @@ export default function Room({ params }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create note');
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create note');
       }
 
       const newNote = await response.json();
@@ -332,9 +333,9 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-    <div className={`${theme.background} min-h-screen`}>
+    <div className={`${theme.background} min-h-screen pt-16`}> {/* Added pt-16 for navbar space */}
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-50">
+      <div className="fixed top-16 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-40"> {/* Changed top-0 to top-16 */}
         <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
           Happy Birthday, {room?.room_name}! 🎉
         </h1>
@@ -343,13 +344,15 @@ export default function Room({ params }) {
       {/* Main Content Area */}
       <div className="pt-20 px-4 pb-24 min-h-screen">
         {/* Notes Container */}
+        <div className="pt-20 px-4 pb-24 min-h-screen">
+        {/* Notes Container */}
         <div 
-          className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 relative"
+          className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 relative overflow-y-auto"
           style={{
-            height: 'calc(100vh - 180px)',
-            overflowY: window.innerWidth <= 768 ? 'auto' : 'hidden', // Enable vertical scroll on mobile
+            height: 'calc(100vh - 240px)', // Adjusted to account for navbar + header + bottom controls
+            minHeight: '400px'
           }}
-        >
+        ></div>
           <div className="relative w-full h-full">
             {adjustNotePositionsForMobile(notes).map((note) => (
               <Note
