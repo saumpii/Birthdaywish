@@ -94,7 +94,7 @@ const Note = ({ note, onUpdate, onDelete }) => {
 };
 
 const InviteUsers = ({ isAdmin, roomId }) => {
-    const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -139,23 +139,23 @@ const InviteUsers = ({ isAdmin, roomId }) => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter email"
-          className="px-3 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500 text-sm w-full max-w-[200px]"
+          placeholder="Enter email to invite"
+          className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
           required
         />
         <button
           type="submit"
           disabled={isInviting}
-          className="bg-purple-500 text-white px-3 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50 whitespace-nowrap text-sm"
+          className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50 whitespace-nowrap"
         >
-          {isInviting ? '...' : 'Invite'}
+          {isInviting ? 'Inviting...' : 'Invite User'}
         </button>
       </div>
       {error && (
-        <p className="text-red-500 text-xs">{error}</p>
+        <p className="text-red-500 text-sm">{error}</p>
       )}
       {success && (
-        <p className="text-green-500 text-xs">{success}</p>
+        <p className="text-green-500 text-sm">{success}</p>
       )}
     </form>
   );
@@ -317,53 +317,62 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-    <div className={`${theme.background}`}>
-    {/* Fixed Header */}
-    <div className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
-      <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
-        Happy Birthday, {room?.room_name}! 🎉
-      </h1>
-    </div>
+    <div className={`min-h-screen ${theme.background}`}>
+      <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
+        <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
+          Happy Birthday, {room?.room_name}! 🎉
+        </h1>
+      </div>
 
-    {/* Scrollable Container with padding for header */}
-    <div className="pt-20 p-4 min-h-screen md:h-screen">
-      {/* Light Rectangle Container - Fixed size */}
-      <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 relative w-full h-[calc(100vh-120px)] md:h-[calc(100vh-140px)]">
-        {/* Notes Container */}
-        <div className="relative w-full h-full">
-          {notes.map((note) => (
-            <Note
-              key={note.id}
-              note={note}
-              onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-              onDelete={room?.can_edit ? handleDeleteNote : undefined}
-            />
-          ))}
+      <div className="relative p-4">
+        {/* Main Container */}
+        <div 
+          className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 relative"
+          style={{
+            height: 'calc(100vh - 120px)',
+            // Apply scroll only on mobile screens
+            overflowX: window.innerWidth <= 768 ? 'auto' : 'hidden',
+            overflowY: window.innerWidth <= 768 ? 'auto' : 'hidden',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          {/* Notes Container */}
+          <div 
+            className="relative w-full h-full"
+            style={{
+              minHeight: '100%',
+            }}
+          >
+            {notes.map((note) => (
+              <Note
+                key={note.id}
+                note={note}
+                onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+                onDelete={room?.can_edit ? handleDeleteNote : undefined}
+              />
+            ))}
+          </div>
+
+          {/* Fixed Controls */}
+          <div className="fixed bottom-6 right-6 z-20">
+            {room?.can_edit && (
+              <button
+                onClick={handleAddNote}
+                className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
+              >
+                <span className="text-2xl">+</span>
+              </button>
+            )}
+          </div>
+
+          {/* Admin Controls */}
+          {room?.is_admin && (
+            <div className="fixed bottom-6 left-6 z-20">
+              <InviteUsers isAdmin={true} roomId={room.id} />
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Controls Container - Better mobile positioning */}
-      <div className="fixed bottom-6 w-full left-0 px-6 flex justify-between items-center z-20">
-        {/* Admin Controls - Left Side */}
-        {room?.is_admin && (
-          <div className="max-w-[60%]">
-            <InviteUsers isAdmin={true} roomId={room.id} />
-          </div>
-        )}
-        
-        {/* Add Note Button - Right Side */}
-        {room?.can_edit && (
-          <div className="ml-auto">  {/* This pushes the button to the right */}
-            <button
-              onClick={handleAddNote}
-              className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
-            >
-              <span className="text-2xl">+</span>
-            </button>
-          </div>
-        )}
-      </div>
     </div>
-  </div>
   );
 }
