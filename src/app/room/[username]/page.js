@@ -309,7 +309,7 @@ export default function Room({ params }) {
 
       <div className="relative p-4 min-h-[calc(100vh-80px)]">
         {/* Light Rectangle Container */}
-        <div className="relative h-[calc(100vh-120px)] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 overflow-hidden">
+        <div className="relative h-[calc(100vh-250px)] bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 overflow-hidden">
           {/* Notes Container */}
           <div className="absolute inset-0 p-4 overflow-hidden">
             {notes.map((note) => (
