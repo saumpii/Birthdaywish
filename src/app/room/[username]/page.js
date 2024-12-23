@@ -134,30 +134,30 @@ const InviteUsers = ({ isAdmin, roomId }) => {
 
   return (
     <form onSubmit={handleInvite} className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter email to invite"
-          className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
-          required
-        />
-        <button
-          type="submit"
-          disabled={isInviting}
-          className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50 whitespace-nowrap"
-        >
-          {isInviting ? 'Inviting...' : 'Invite User'}
-        </button>
+    <div className="flex items-center gap-2">
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Enter email"
+        className="px-3 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500 w-full max-w-[200px] text-sm"
+        required
+      />
+      <button
+        type="submit"
+        disabled={isInviting}
+        className="bg-purple-500 text-white px-3 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50 whitespace-nowrap text-sm flex-shrink-0"
+      >
+        {isInviting ? '...' : 'Invite'}
+      </button>
+    </div>
+    {(error || success) && (
+      <div className="absolute top-full left-0 mt-1">
+        {error && <p className="text-red-500 text-xs">{error}</p>}
+        {success && <p className="text-green-500 text-xs">{success}</p>}
       </div>
-      {error && (
-        <p className="text-red-500 text-sm">{error}</p>
-      )}
-      {success && (
-        <p className="text-green-500 text-sm">{success}</p>
-      )}
-    </form>
+    )}
+  </form>
   );
 };
 
@@ -317,62 +317,59 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-    <div className={`min-h-screen ${theme.background}`}>
-      <div className="sticky top-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-10">
-        <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
-          Happy Birthday, {room?.room_name}! 🎉
-        </h1>
+    <div className={`${theme.background} min-h-screen`}>
+    {/* Fixed Header */}
+    <div className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-50">
+      <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
+        Happy Birthday, {room?.room_name}! 🎉
+      </h1>
+    </div>
+
+    {/* Main Content Area */}
+    <div className="pt-20 px-4 pb-24 min-h-screen">
+      {/* Notes Container */}
+      <div 
+        className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 relative"
+        style={{
+          height: 'calc(100vh - 180px)', // Adjusted to account for header and bottom controls
+        }}
+      >
+        <div className="relative w-full h-full">
+          {notes.map((note) => (
+            <Note
+              key={note.id}
+              note={note}
+              onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+              onDelete={room?.can_edit ? handleDeleteNote : undefined}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="relative p-4">
-        {/* Main Container */}
-        <div 
-          className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 relative"
-          style={{
-            height: 'calc(100vh - 120px)',
-            // Apply scroll only on mobile screens
-            overflowX: window.innerWidth <= 768 ? 'auto' : 'hidden',
-            overflowY: window.innerWidth <= 768 ? 'auto' : 'hidden',
-            WebkitOverflowScrolling: 'touch'
-          }}
-        >
-          {/* Notes Container */}
-          <div 
-            className="relative w-full h-full"
-            style={{
-              minHeight: '100%',
-            }}
-          >
-            {notes.map((note) => (
-              <Note
-                key={note.id}
-                note={note}
-                onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-                onDelete={room?.can_edit ? handleDeleteNote : undefined}
-              />
-            ))}
-          </div>
-
-          {/* Fixed Controls */}
-          <div className="fixed bottom-6 right-6 z-20">
-            {room?.can_edit && (
+      {/* Bottom Controls Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg p-4 z-40">
+        <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
+          {/* Admin Controls - Left */}
+          {room?.is_admin && (
+            <div className="flex-shrink-0 max-w-[60%] md:max-w-none">
+              <InviteUsers isAdmin={true} roomId={room.id} />
+            </div>
+          )}
+          
+          {/* Add Note Button - Right */}
+          {room?.can_edit && (
+            <div className="flex-shrink-0 ml-auto">
               <button
                 onClick={handleAddNote}
                 className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
               >
                 <span className="text-2xl">+</span>
               </button>
-            )}
-          </div>
-
-          {/* Admin Controls */}
-          {room?.is_admin && (
-            <div className="fixed bottom-6 left-6 z-20">
-              <InviteUsers isAdmin={true} roomId={room.id} />
             </div>
           )}
         </div>
       </div>
     </div>
+  </div>
   );
 }

@@ -146,3 +146,25 @@
   background-size: 200% 200%;
   animation: gradient-text 3s ease infinite;
 }
+
+@media (max-width: 768px) {
+  body {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
+
+@media (min-width: 769px) {
+  body {
+    overflow: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    position: fixed;
+  }
+}
