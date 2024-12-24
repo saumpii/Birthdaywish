@@ -246,16 +246,13 @@ export default function Room({ params }) {
 
   const handleAddNote = async () => {
     if (!room?.id || !room.can_edit) return;
-
+  
     try {
-      const container = document.querySelector('.overflow-y-auto');
-      const containerRect = container.getBoundingClientRect();
-      
       const initialPosition = {
-        x: Math.floor(Math.random() * (containerRect.width - 200)), // Keep within container width
-        y: Math.floor(Math.random() * (containerRect.height - 200)) // Keep within container height
+        x: Math.floor(Math.random() * 300), // Safe default width
+        y: Math.floor(Math.random() * 300)  // Safe default height
       };
-
+  
       const response = await fetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -267,20 +264,14 @@ export default function Room({ params }) {
           theme: room.theme
         })
       });
-
+  
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create note');
+        throw new Error('Failed to create note');
       }
-
+  
       const newNote = await response.json();
       setNotes(prevNotes => [...prevNotes, newNote]);
-
-      // Scroll to the new note
-      container.scrollTo({
-        top: Math.max(0, initialPosition.y - 100),
-        behavior: 'smooth'
-      });
+  
     } catch (error) {
       console.error('Error adding note:', error);
     }
@@ -352,50 +343,52 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-    <div className={`${theme.background} min-h-screen`}>
-    {/* Header with padding */}
-    <div className="fixed top-16 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-40">
-      <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
-        Happy Birthday, {room?.room_name}! 🎉
-      </h1>
-    </div>
-
-    {/* QR Code with visibility */}
-    <div className="fixed top-4 right-4 z-50">
-      <QRCodeGenerator name={room.room_name} />
-    </div>
-
-    {/* Notes Container with proper padding and containment */}
-    <div className="pt-32 px-4 pb-28"> {/* Increased padding-top and bottom */}
-      <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-6 min-h-[calc(100vh-240px)]">
-        <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {notes.map((note) => (
-            <Note
-              key={note.id}
-              note={note}
-              onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-              onDelete={room?.can_edit ? handleDeleteNote : undefined}
-            />
-          ))}
+    <div className={`${theme.background} min-h-screen ${
+      window.innerWidth <= 768 ? 'overflow-y-auto' : ''
+    }`}>
+      {/* Header with padding */}
+      <div className="fixed top-16 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-40">
+        <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
+          Happy Birthday, {room?.room_name}! 🎉
+        </h1>
+      </div>
+  
+      {/* QR Code with visibility */}
+      <div className="fixed top-4 right-4 z-50">
+        <QRCodeGenerator name={room.room_name} />
+      </div>
+  
+      {/* Notes Container with proper padding and containment */}
+      <div className="pt-32 px-4 pb-28"> {/* Increased padding-top and bottom */}
+        <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-6 min-h-[calc(100vh-240px)]">
+          <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {notes.map((note) => (
+              <Note
+                key={note.id}
+                note={note}
+                onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+                onDelete={room?.can_edit ? handleDeleteNote : undefined}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+  
+      {/* Controls with proper spacing */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg p-4 z-40">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
+          {room?.can_edit && (
+            <button
+              onClick={handleAddNote}
+              className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform ml-auto`}
+            >
+              <span className="text-2xl">+</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
-
-    {/* Controls with proper spacing */}
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg p-4 z-40">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
-        {room?.can_edit && (
-          <button
-            onClick={handleAddNote}
-            className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform ml-auto`}
-          >
-            <span className="text-2xl">+</span>
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
  
   )
 }
