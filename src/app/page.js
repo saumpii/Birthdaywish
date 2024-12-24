@@ -14,7 +14,7 @@ export default function Home() {
   };
 
   return (
-    <main className="bg-white">
+    <main className= 'overflow-y-auto'>
       <AnimatedHero onCreateClick={scrollToForm} />
       <div ref={formRef} className="scroll-mt-6">
         <CardGenerator />
