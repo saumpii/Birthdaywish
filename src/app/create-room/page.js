@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import QRCodeGenerator from '../components/QRCodeGenerator';
 
 export default function CreateRoom() {
   const { data: session, status } = useSession();

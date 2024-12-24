@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Draggable from 'react-draggable';
+import QRCodeGenerator from '@/app/components/QRCodeGenerator';
 
 const ROOM_THEMES = {
   'theme1': {
@@ -342,7 +343,7 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-    <div className={`${theme.background} h-screen md:overflow-hidden ${
+   <div className={`${theme.background} h-screen md:overflow-hidden ${
       window.innerWidth <= 768 ? 'overflow-y-auto' : ''
     }`}>
       {/* Header */}
@@ -351,7 +352,7 @@ export default function Room({ params }) {
           Happy Birthday, {room?.room_name}! 🎉
         </h1>
       </div>
-
+<QRCodeGenerator name ={room.room_name} />
       {/* Notes Container */}
       <div className="pt-24 px-4 pb-24">
         <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:h-[calc(100vh-200px)]">
