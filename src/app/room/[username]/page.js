@@ -414,7 +414,7 @@ export default function Room({ params }) {
    </div>
 
    {/* Controls */}
-   <div className='pb-10'>
+   <div className='pb-20'>
    <div className="bg-white/90 backdrop-blur-sm shadow-lg p-6 rounded-xl mx-6">
      <div className="flex justify-between items-center gap-6">
        {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
