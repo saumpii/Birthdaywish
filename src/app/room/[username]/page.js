@@ -343,51 +343,47 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-    <div className={`${theme.background} h-screen md:overflow-hidden ${
-      window.innerWidth <= 768 ? 'overflow-y-auto' : ''
-    }`}>
-    {/* Header with padding */}
-    <div >
+    <div className={`${theme.background} min-h-screen p-6`}>
+    {/* Header */}
+    <div className="bg-white/90 backdrop-blur-sm shadow-sm p-6 rounded-xl mb-8">
       <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
         Happy Birthday, {room?.room_name}! 🎉
       </h1>
     </div>
 
-    {/* QR Code with visibility */}
-    <div className="fixed top-4 right-4 z-50">
+    {/* QR Code */}
+    <div className="flex justify-end mb-8">
       <QRCodeGenerator name={room.room_name} />
     </div>
 
-    {/* Notes Container with proper padding and containment */}
-    <div className="pt-32 px-4 pb-28"> {/* Increased padding-top and bottom */}
-      <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-6 min-h-[calc(100vh-240px)]">
-        <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {notes.map((note) => (
-            <Note
-              key={note.id}
-              note={note}
-              onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-              onDelete={room?.can_edit ? handleDeleteNote : undefined}
-            />
-          ))}
-        </div>
+    {/* Notes Container */}
+    <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-8 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {notes.map((note) => (
+          <Note
+            key={note.id}
+            note={note}
+            onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+            onDelete={room?.can_edit ? handleDeleteNote : undefined}
+          />
+        ))}
       </div>
     </div>
 
-    {/* Controls with proper spacing */}
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
-        {room?.can_edit && (
+    {/* Controls */}
+    <div className="bg-white/90 backdrop-blur-sm shadow-lg p-6 rounded-xl">
+      <div className="flex justify-between items-center gap-6">
+        {<InviteUsers isAdmin={true} roomId={room.id} />}
+        {(
           <button
             onClick={handleAddNote}
-            className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform ml-auto`}
+            className={`${theme.buttonStyle} text-white w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-transform ml-auto`}
           >
             <span className="text-2xl">+</span>
           </button>
         )}
       </div>
     </div>
-  </div>
+</div>
   )
 }
