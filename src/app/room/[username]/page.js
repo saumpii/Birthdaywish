@@ -347,7 +347,7 @@ export default function Room({ params }) {
       window.innerWidth <= 768 ? 'overflow-y-auto' : ''
     }`}>
     {/* Header with padding */}
-    <div className="fixed top-16 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-40">
+    <div >
       <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
         Happy Birthday, {room?.room_name}! 🎉
       </h1>
@@ -375,7 +375,7 @@ export default function Room({ params }) {
     </div>
 
     {/* Controls with proper spacing */}
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg p-4 z-40">
+    <div >
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
         {room?.can_edit && (
