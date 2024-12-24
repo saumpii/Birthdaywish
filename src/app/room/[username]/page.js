@@ -43,18 +43,30 @@ const Note = ({ note, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const nodeRef = useRef(null);
+  const timeoutRef = useRef(null);
   const isMobile = window.innerWidth <= 768;
-
+ 
   const handleLongPress = () => {
+    timeoutRef.current = setTimeout(() => {
+      setShowDelete(true);
+    }, 500);
+  };
+ 
+  const handleDoubleClick = () => {
     setShowDelete(true);
   };
-
-   const handleDoubleClick = () => {
-   setShowDelete(true);
- };
-
+ 
+  const handleTouchEnd = () => {
+    clearTimeout(timeoutRef.current);
+  };
+ 
   const noteContent = (
-    <div className={`w-full ${note.theme ? ROOM_THEMES[note.theme].noteStyle : 'bg-yellow-100'} rounded-lg shadow-lg`}>
+    <div 
+      className={`w-full ${note.theme ? ROOM_THEMES[note.theme].noteStyle : 'bg-yellow-100'} rounded-lg shadow-lg`}
+      onDoubleClick={handleDoubleClick}
+      onTouchStart={handleLongPress}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="drag-handle h-6 bg-gray-100/50 rounded-t-lg" />
       <div className="relative p-3">
         {isEditing ? (
@@ -78,10 +90,10 @@ const Note = ({ note, onUpdate, onDelete }) => {
             {content}
           </div>
         )}
-        {onDelete && showDelete &&(
+        {onDelete && showDelete && (
           <button
             onClick={() => onDelete(note.id)}
-            className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center text-red-500 opacity-0 hover:opacity-100 transition-opacity rounded-full hover:bg-red-100"
+            className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center text-white bg-red-500 rounded-full hover:bg-red-600"
           >
             ×
           </button>
@@ -89,10 +101,8 @@ const Note = ({ note, onUpdate, onDelete }) => {
       </div>
     </div>
   );
-
-  return isMobile ? (
-    noteContent
-  ) : (
+ 
+  return isMobile ? noteContent : (
     <Draggable
       defaultPosition={{ x: note.position_x, y: note.position_y }}
       onStop={(e, data) => onUpdate && onUpdate({
@@ -110,7 +120,7 @@ const Note = ({ note, onUpdate, onDelete }) => {
       </div>
     </Draggable>
   );
-};
+ };
 
 const InviteUsers = ({ isAdmin, roomId }) => {
   const [email, setEmail] = useState('');
