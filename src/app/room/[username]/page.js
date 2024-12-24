@@ -343,7 +343,9 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-    <div className={`${theme.background} min-h-screen p-6`}>
+    <div className={`${theme.background} h-screen md:overflow-hidden pb-24 ${
+      window.innerWidth <= 768 ? 'overflow-y-auto' : ''
+    }`}>
     {/* Header */}
     <div className="bg-white/90 backdrop-blur-sm shadow-sm p-6 rounded-xl mb-8">
       <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
