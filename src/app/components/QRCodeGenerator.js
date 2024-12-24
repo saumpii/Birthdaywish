@@ -1,11 +1,12 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { X } from 'lucide-react'; // Import X icon
+import { X } from 'lucide-react';
 
 const QRCodeGenerator = ({ name }) => {
  const [showQRCode, setShowQRCode] = useState(false);
  const canvasRef = useRef();
+ const containerRef = useRef(); // Add this for capturing entire container
 
  const handleGenerateQRCode = () => {
    setShowQRCode(true);
@@ -16,9 +17,30 @@ const QRCodeGenerator = ({ name }) => {
  };
 
  const handleDownload = () => {
+   const canvas = document.createElement('canvas');
+   const ctx = canvas.getContext('2d');
+   
+   // Set canvas size to include space for text
+   canvas.width = 200;
+   canvas.height = 250;
+   
+   // Draw white background
+   ctx.fillStyle = '#ffffff';
+   ctx.fillRect(0, 0, canvas.width, canvas.height);
+   
+   // Draw QR code
+   ctx.drawImage(canvasRef.current, 0, 0);
+   
+   // Add text below QR code
+   ctx.font = 'bold 16px sans-serif';
+   ctx.fillStyle = '#9333ea';
+   ctx.textAlign = 'center';
+   ctx.fillText(`Happy Birthday ${name}!`, canvas.width/2, 235);
+   
+   // Create download link
    const link = document.createElement('a');
    link.download = `birthday-qr-${name}.png`;
-   link.href = canvasRef.current.toDataURL();
+   link.href = canvas.toDataURL();
    link.click();
  };
 
@@ -31,21 +53,9 @@ const QRCodeGenerator = ({ name }) => {
        width: 200,
        margin: 2,
        color: {
-         dark: '#9333ea',
-         light: '#ffffff',
+        dark: '#333333',
+        light: '#ffffff',
        },
-     }, (error) => {
-       if (error) console.error(error);
-       else {
-         const ctx = canvasRef.current.getContext('2d');
-         ctx.fillStyle = '#ffffff';
-         ctx.fillRect(0, 200, 200, 40);
-         
-         ctx.font = 'bold 14px sans-serif';
-         ctx.fillStyle = '#9333ea';
-         ctx.textAlign = 'center';
-         ctx.fillText(`Happy Birthday ${name}!`, 100, 225);
-       }
      });
    }
  }, [showQRCode, name]);
@@ -55,12 +65,12 @@ const QRCodeGenerator = ({ name }) => {
      {!showQRCode ? (
        <button
          onClick={handleGenerateQRCode}
-         className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+         className="bg-black text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
        >
          Show QR Code
        </button>
      ) : (
-       <div className="bg-white p-4 rounded-lg shadow-lg relative">
+       <div ref={containerRef} className="bg-white p-4 rounded-lg shadow-lg relative">
          <button 
            onClick={handleClose}
            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
@@ -68,6 +78,9 @@ const QRCodeGenerator = ({ name }) => {
            <X size={16} />
          </button>
          <canvas ref={canvasRef} className="mb-4" />
+         <p className="text-black-600 font-bold text-center mb-4">
+           Happy Birthday {name} 🎉
+         </p>
          <button
            onClick={handleDownload}
            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors w-full"
