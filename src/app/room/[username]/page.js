@@ -375,7 +375,7 @@ export default function Room({ params }) {
     </div>
 
     {/* Controls with proper spacing */}
-    <div >
+    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
         {room?.can_edit && (
