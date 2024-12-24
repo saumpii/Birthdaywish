@@ -347,47 +347,68 @@ export default function Room({ params }) {
       window.innerWidth <= 768 ? 'overflow-y-auto' : ''
     }`}>
     {/* Header */}
-    <div className="bg-white/90 backdrop-blur-sm shadow-sm p-6 rounded-xl mb-8">
-      <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
-        Happy Birthday, {room?.room_name}! 🎉
-      </h1>
-    </div>
+     {/* Header */}
+   <div className="bg-white/90 backdrop-blur-sm shadow-sm p-6 rounded-xl mt-8 mx-6">
+     <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
+       Happy Birthday, {room?.room_name}! 🎉
+     </h1>
+   </div>
 
-    {/* QR Code */}
-    <div className="flex justify-end mb-8">
-      <QRCodeGenerator name={room.room_name} />
-    </div>
+   {/* QR Code */}
+   <div className="flex justify-end mx-6 mt-8">
+     <QRCodeGenerator name={room.room_name} />
+   </div>
 
-    {/* Notes Container */}
-    <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-8 mb-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {notes.map((note) => (
-          <Note
-            key={note.id}
-            note={note}
-            onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-            onDelete={room?.can_edit ? handleDeleteNote : undefined}
-          />
-        ))}
-      </div>
-    </div>
+   {/* Notes Container */}
+   <div className="px-6 py-8">
+     <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-8">
+       <div className="relative w-full overflow-hidden md:h-[calc(100vh-400px)]">
+         {window.innerWidth <= 768 ? (
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+             {notes.map((note) => (
+               <Note
+                 key={note.id}
+                 note={note}
+                 onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+                 onDelete={room?.can_edit ? handleDeleteNote : undefined}
+               />
+             ))}
+           </div>
+         ) : (
+           <div className="relative h-full w-full">
+             {notes.map((note) => (
+               <Note
+                 key={note.id}
+                 note={{
+                   ...note,
+                   position_x: Math.min(note.position_x, window.innerWidth - 300),
+                   position_y: Math.min(note.position_y, window.innerHeight - 300)
+                 }}
+                 onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+                 onDelete={room?.can_edit ? handleDeleteNote : undefined}
+               />
+             ))}
+           </div>
+         )}
+       </div>
+     </div>
+   </div>
 
-    {/* Controls */}
-    <div className="pb-10">
-    <div className="bg-white/90 backdrop-blur-sm shadow-lg p-6 rounded-xl">
-      <div className="flex justify-between items-center gap-6">
-        {<InviteUsers isAdmin={true} roomId={room.id} />}
-        {(
-          <button
-            onClick={handleAddNote}
-            className={`${theme.buttonStyle} text-white w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-transform ml-auto`}
-          >
-            <span className="text-2xl">+</span>
-          </button>
-        )}
-      </div>
-    </div>
-    </div>
-</div>
+   {/* Controls */}
+   <div className='pb-10'></div>
+   <div className="bg-white/90 backdrop-blur-sm shadow-lg p-6 rounded-xl mx-6">
+     <div className="flex justify-between items-center gap-6">
+       {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
+       {room?.can_edit && (
+         <button
+           onClick={handleAddNote}
+           className={`${theme.buttonStyle} text-white w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-transform ml-auto`}
+         >
+           <span className="text-2xl">+</span>
+         </button>
+       )}
+     </div>
+   </div>
+ </div>
   )
 }
