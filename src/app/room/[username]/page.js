@@ -42,53 +42,62 @@ const Note = ({ note, onUpdate, onDelete }) => {
   const [content, setContent] = useState(note.content);
   const [isEditing, setIsEditing] = useState(false);
   const nodeRef = useRef(null);
+  const isMobile = window.innerWidth <= 768;
 
-  return (
+  const noteContent = (
+    <div className={`w-full ${note.theme ? ROOM_THEMES[note.theme].noteStyle : 'bg-yellow-100'} rounded-lg shadow-lg`}>
+      <div className="drag-handle h-6 bg-gray-100/50 rounded-t-lg" />
+      <div className="relative p-3">
+        {isEditing ? (
+          <textarea
+            className="w-full h-24 p-2 bg-transparent resize-none focus:outline-none border rounded"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onBlur={() => {
+              setIsEditing(false);
+              if (content !== note.content && onUpdate) {
+                onUpdate({ ...note, content });
+              }
+            }}
+            autoFocus
+          />
+        ) : (
+          <div
+            onClick={() => onUpdate && setIsEditing(true)}
+            className={`w-full h-24 p-2 ${onUpdate ? 'cursor-text' : 'cursor-default'} overflow-auto text-sm`}
+          >
+            {content}
+          </div>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(note.id)}
+            className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center text-red-500 opacity-0 hover:opacity-100 transition-opacity rounded-full hover:bg-red-100"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  return isMobile ? (
+    noteContent
+  ) : (
     <Draggable
-  defaultPosition={{ x: Math.floor(note.position_x), y: Math.floor(note.position_y) }}
-  onStop={(e, data) => onUpdate && onUpdate({
-    ...note,
-    position_x: Math.floor(data.x),
-    position_y: Math.floor(data.y)
-  })}
-  bounds=".overflow-y-auto" // Restrict to scrollable container
-  disabled={!onUpdate}
-  handle=".drag-handle"
-  nodeRef={nodeRef}
->
-      <div ref={nodeRef} className={`absolute w-40 md:w-48 ${note.theme ? ROOM_THEMES[note.theme].noteStyle : 'bg-yellow-100'} rounded-lg shadow-lg`}>
-        <div className="drag-handle h-6 bg-gray-100/50 rounded-t-lg" />
-        <div className="relative p-3">
-          {isEditing ? (
-            <textarea
-              className="w-full h-24 md:h-32 p-2 bg-transparent resize-none focus:outline-none border rounded"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onBlur={() => {
-                setIsEditing(false);
-                if (content !== note.content && onUpdate) {
-                  onUpdate({ ...note, content });
-                }
-              }}
-              autoFocus
-            />
-          ) : (
-            <div
-              onClick={() => onUpdate && setIsEditing(true)}
-              className={`w-full h-24 md:h-32 p-2 ${onUpdate ? 'cursor-text' : 'cursor-default'} overflow-auto text-sm md:text-base`}
-            >
-              {content}
-            </div>
-          )}
-          {onDelete && (
-            <button
-              onClick={() => onDelete(note.id)}
-              className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center text-red-500 opacity-0 hover:opacity-100 transition-opacity rounded-full hover:bg-red-100"
-            >
-              ×
-            </button>
-          )}
-        </div>
+      defaultPosition={{ x: note.position_x, y: note.position_y }}
+      onStop={(e, data) => onUpdate && onUpdate({
+        ...note,
+        position_x: data.x,
+        position_y: data.y
+      })}
+      bounds="parent"
+      disabled={!onUpdate}
+      handle=".drag-handle"
+      nodeRef={nodeRef}
+    >
+      <div ref={nodeRef} className="absolute">
+        {noteContent}
       </div>
     </Draggable>
   );
@@ -343,53 +352,50 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-   <div className={`${theme.background} h-screen md:overflow-hidden ${
-      window.innerWidth <= 768 ? 'overflow-y-auto' : ''
-    }`}>
-      {/* Header */}
-      <div className="fixed top-16 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-40">
-        <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
-          Happy Birthday, {room?.room_name}! 🎉
-        </h1>
-      </div>
-<QRCodeGenerator name ={room.room_name} />
-      {/* Notes Container */}
-      <div className="pt-24 px-4 pb-24">
-        <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-4 md:h-[calc(100vh-200px)]">
-          <div className="relative">
-            {notes.map((note, index) => (
-              <Note
-                key={note.id}
-                note={{
-                  ...note,
-                  position_x: window.innerWidth <= 768 ? 20 : note.position_x,
-                  position_y: window.innerWidth <= 768 ? index * 220 : note.position_y
-                }}
-                onUpdate={room?.can_edit ? handleUpdateNote : undefined}
-                onDelete={room?.can_edit ? handleDeleteNote : undefined}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className={`${theme.background} min-h-screen`}>
+    {/* Header with padding */}
+    <div className="fixed top-16 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-sm p-4 z-40">
+      <h1 className={`text-xl md:text-3xl font-bold text-center ${theme.titleStyle}`}>
+        Happy Birthday, {room?.room_name}! 🎉
+      </h1>
+    </div>
 
-      {/* Controls */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg p-4 z-40">
-        <div className="flex justify-between items-center">
-          {room?.is_admin && (
-            <InviteUsers isAdmin={true} roomId={room.id} />
-          )}
-          {room?.can_edit && (
-            <button
-              onClick={handleAddNote}
-              className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center ml-auto`}
-            >
-              <span className="text-2xl">+</span>
-            </button>
-          )}
+    {/* QR Code with visibility */}
+    <div className="fixed top-4 right-4 z-50">
+      <QRCodeGenerator name={room.room_name} />
+    </div>
+
+    {/* Notes Container with proper padding and containment */}
+    <div className="pt-32 px-4 pb-28"> {/* Increased padding-top and bottom */}
+      <div className="bg-white/30 backdrop-blur-sm rounded-xl shadow-xl p-6 min-h-[calc(100vh-240px)]">
+        <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {notes.map((note) => (
+            <Note
+              key={note.id}
+              note={note}
+              onUpdate={room?.can_edit ? handleUpdateNote : undefined}
+              onDelete={room?.can_edit ? handleDeleteNote : undefined}
+            />
+          ))}
         </div>
       </div>
     </div>
+
+    {/* Controls with proper spacing */}
+    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg p-4 z-40">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
+        {room?.can_edit && (
+          <button
+            onClick={handleAddNote}
+            className={`${theme.buttonStyle} text-white w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-transform ml-auto`}
+          >
+            <span className="text-2xl">+</span>
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
  
   )
 }
