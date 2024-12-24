@@ -343,7 +343,7 @@ export default function Room({ params }) {
   const theme = ROOM_THEMES[room?.theme || 'theme1'];
 
   return (
-    <div className={`${theme.background} h-screen md:overflow-hidden pb-24 ${
+    <div className={`${theme.background} h-screen md:overflow-hidden pb-32 ${
       window.innerWidth <= 768 ? 'overflow-y-auto' : ''
     }`}>
     {/* Header */}
@@ -373,6 +373,7 @@ export default function Room({ params }) {
     </div>
 
     {/* Controls */}
+    <div className="pb-10">
     <div className="bg-white/90 backdrop-blur-sm shadow-lg p-6 rounded-xl">
       <div className="flex justify-between items-center gap-6">
         {<InviteUsers isAdmin={true} roomId={room.id} />}
@@ -385,6 +386,7 @@ export default function Room({ params }) {
           </button>
         )}
       </div>
+    </div>
     </div>
 </div>
   )
