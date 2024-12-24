@@ -1,6 +1,7 @@
 // src/app/room/[username]/page.js
 'use client';
 
+import { Mixpanel } from '@/utils/mixpanel';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -128,6 +129,11 @@ const InviteUsers = ({ isAdmin, roomId }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  Mixpanel.track(Mixpanel.events.INVITE_USER, {
+    room_id: roomId,
+    invited_email: email.trim()
+  });
+
   const handleInvite = async (e) => {
     e.preventDefault();
     setIsInviting(true);
@@ -197,6 +203,16 @@ export default function Room({ params }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    if (room) {
+      Mixpanel.track(Mixpanel.events.VIEW_ROOM, {
+        room_id: room.id,
+        room_name: room.room_name,
+        is_admin: room.is_admin,
+        can_edit: room.can_edit
+      });
+    }
+  }, [room]);
 
   const adjustNotePositionsForMobile = (notes) => {
     const isMobile = window.innerWidth <= 768;
