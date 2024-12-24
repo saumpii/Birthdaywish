@@ -41,8 +41,17 @@ const ROOM_THEMES = {
 const Note = ({ note, onUpdate, onDelete }) => {
   const [content, setContent] = useState(note.content);
   const [isEditing, setIsEditing] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   const nodeRef = useRef(null);
   const isMobile = window.innerWidth <= 768;
+
+  const handleLongPress = () => {
+    setShowDelete(true);
+  };
+
+   const handleDoubleClick = () => {
+   setShowDelete(true);
+ };
 
   const noteContent = (
     <div className={`w-full ${note.theme ? ROOM_THEMES[note.theme].noteStyle : 'bg-yellow-100'} rounded-lg shadow-lg`}>
@@ -69,7 +78,7 @@ const Note = ({ note, onUpdate, onDelete }) => {
             {content}
           </div>
         )}
-        {onDelete && (
+        {onDelete && showDelete &&(
           <button
             onClick={() => onDelete(note.id)}
             className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center text-red-500 opacity-0 hover:opacity-100 transition-opacity rounded-full hover:bg-red-100"
@@ -355,7 +364,7 @@ export default function Room({ params }) {
    </div>
 
    {/* QR Code */}
-   <div className="flex justify-end mx-6 mt-8">
+   <div className="flex justify-center mx-6 mt-8">
      <QRCodeGenerator name={room.room_name} />
    </div>
 
@@ -395,7 +404,7 @@ export default function Room({ params }) {
    </div>
 
    {/* Controls */}
-   <div className='pb-10'></div>
+   <div className='pb-10'>
    <div className="bg-white/90 backdrop-blur-sm shadow-lg p-6 rounded-xl mx-6">
      <div className="flex justify-between items-center gap-6">
        {room?.is_admin && <InviteUsers isAdmin={true} roomId={room.id} />}
@@ -408,6 +417,7 @@ export default function Room({ params }) {
          </button>
        )}
      </div>
+   </div>
    </div>
  </div>
   )
