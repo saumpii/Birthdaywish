@@ -17,6 +17,11 @@ function FloatingEmoji({ emoji, delay }) {
 }
 
 export default function AnimatedHero({ onCreateClick }) {
+  const handleClick = (e) => {
+    e.preventDefault();
+    onCreateClick(); // Keep original click handler
+  };
+
   return (
     <div className="min-h-[80vh] relative overflow-hidden bg-gradient-to-br from-fuchsia-100 via-purple-100 to-cyan-100">
       {/* Background animations */}
@@ -62,12 +67,14 @@ export default function AnimatedHero({ onCreateClick }) {
             <span className="text-5xl transform hover:scale-125 transition-transform cursor-pointer animate-delay-400">🎂</span>
           </div>
           
+          <div className="touch-auto">
           <button 
             onClick={onCreateClick}
-            className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white px-12 py-4 rounded-full text-2xl font-semibold hover:opacity-90 transition-all hover:scale-105 animate-pulse-slow shadow-lg"
+            className="touch-auto cursor-pointer bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white px-12 py-4 rounded-full text-2xl font-semibold hover:opacity-90 transition-all hover:scale-105 animate-pulse-slow shadow-lg"
           >
             Create My Card 🎨
           </button>
+          </div>
         </div>
       </div>
       

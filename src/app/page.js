@@ -14,11 +14,11 @@ export default function Home() {
   };
 
   return (
-    <main className= 'overflow-y-auto'>
-      <AnimatedHero onCreateClick={scrollToForm} />
-      <div ref={formRef} className="scroll-mt-6">
-        <CardGenerator />
-      </div>
-    </main>
+    <main className="h-screen overflow-y-auto touch-auto -webkit-overflow-scrolling-touch">
+    <AnimatedHero onCreateClick={scrollToForm} />
+    <div ref={formRef} className="scroll-mt-16 scroll-smooth">
+      <CardGenerator />
+    </div>
+  </main>
   );
 }
