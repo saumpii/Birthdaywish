@@ -16,7 +16,7 @@ export default function Home() {
   return (
     <main className="h-screen overflow-y-auto touch-auto -webkit-overflow-scrolling-touch">
     <AnimatedHero onCreateClick={scrollToForm} />
-    <div ref={formRef} className="scroll-mt-16 scroll-smooth">
+    <div ref={formRef} className="scroll-mt-16 scroll-smooth pb-32">
       <CardGenerator />
     </div>
   </main>
