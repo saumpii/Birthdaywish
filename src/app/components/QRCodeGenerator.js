@@ -65,7 +65,7 @@ const QRCodeGenerator = ({ name }) => {
      {!showQRCode ? (
        <button
          onClick={handleGenerateQRCode}
-         className="bg-black text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+         className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-normal"
        >
          Show QR Code
        </button>
