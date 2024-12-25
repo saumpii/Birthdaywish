@@ -42,11 +42,9 @@ export default function Navbar() {
               Home
             </Link>
             <Link href="/create-room" className="text-gray-600 hover:text-purple-500 transition-colors duration-200">
-              Create Room
+              Create Birthday Room
             </Link>
-            <Link href="/make-my-weekend" className="text-gray-600 hover:text-purple-500 transition-colors duration-200">
-              Make My Weekend
-            </Link>
+            
 
             {session ? (
               <div className="flex items-center space-x-4">
@@ -87,14 +85,6 @@ export default function Navbar() {
           >
             Create Room
           </Link>
-          <Link 
-            href="/make-my-weekend" 
-            className="text-gray-600 hover:text-purple-500 transition-colors duration-200 py-2"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Make My Weekend
-          </Link>
-
           {session ? (
             <div className="flex flex-col space-y-4 pt-4 border-t">
               <span className="text-sm text-gray-600">{session.user.email}</span>
