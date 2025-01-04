@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
+import { Mixpanel } from '@/utils/mixpanel';
 
 const CARD_TEMPLATES = {
     '1': {
@@ -195,6 +196,12 @@ export default function CardGenerator() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    Mixpanel.track('Generate Card', {
+      template_name: CARD_TEMPLATES[formData.selectedTemplate].name,
+      has_background_image: !!backgroundImage,
+      has_memories: !!formData.memories,
+      timestamp: new Date().toISOString()
+    })
     await generateWish();
   };
 
